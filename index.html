@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#047857">
+    <meta name="description" content="Aplikasi Dzikir & Doa Qurani Premium">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Dzikir & Doa Qurani</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts: Inter (UI) & Amiri/Scheherazade (Arabic Fallback) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600;700&family=Scheherazade+New:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* --- TYPOGRAPHY SETUP --- */
+        @font-face {
+            font-family: 'LPMQ Isep Misbah';
+            src: url('https://lpmq.kemenag.go.id/public/font/LPMQ_IsepMisbah.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        :root {
+            --font-ui: 'Inter', system-ui, -apple-system, sans-serif;
+            --font-arabic: 'LPMQ Isep Misbah', 'Scheherazade New', 'Amiri', serif;
+            --primary: #047857; /* Emerald 700 */
+            --bg-light: #f8fafc;
+        }
+
+        body {
+            font-family: var(--font-ui);
+            background-color: var(--bg-light);
+            -webkit-tap-highlight-color: transparent;
+            overscroll-behavior-y: none;
+        }
+
+        /* Specialized Arabic Styling */
+        .font-arabic {
+            font-family: var(--font-arabic);
+            line-height: 2.5; /* Extra spacious for harakat */
+            font-feature-settings: "kern" 1, "liga" 1;
+        }
+
+        /* Hide Scrollbar */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Touch Ripple */
+        .ripple {
+            position: relative;
+            overflow: hidden;
+            transform: translate3d(0, 0, 0);
+        }
+        .ripple:after {
+            content: "";
+            display: block;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            background-image: radial-gradient(circle, #000 10%, transparent 10.01%);
+            background-repeat: no-repeat;
+            background-position: 50%;
+            transform: scale(10, 10);
+            opacity: 0;
+            transition: transform .5s, opacity 1s;
+        }
+        .ripple:active:after {
+            transform: scale(0, 0);
+            opacity: 0.1;
+            transition: 0s;
+        }
+
+        /* Slider Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        /* Islamic Pattern Background */
+        .islamic-pattern {
+            background-color: #ffffff;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23047857' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased h-screen flex flex-col justify-between select-none">
+
+    <!-- === APP CONTENT AREA === -->
+    <main id="app-root" class="flex-grow w-full max-w-md mx-auto relative h-full overflow-hidden bg-white shadow-2xl md:border-x md:border-gray-100">
+        <!-- Content injected via JS -->
+    </main>
+
+    <!-- === JAVASCRIPT LOGIC === -->
+    <script>
+        // ==========================================
+        // 1. DATABASE (FIXED & PRECISE)
+        // ==========================================
+        const DB = {
+            dzikirPagi: [
+                {
+                    id: 1,
+                    title: "Ayat Kursi",
+                    arabic: "اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ ۚ لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ ۚ لَهُ مَا فِي السَّمَاوَاتِ وَمَا فِي الْأَرْضِ ۗ مَنْ ذَا الَّذِي يَشْفَعُ عِنْدَهُ إِلَّا بِإِذْنِهِ ۚ يَعْلَمُ مَا بَيْنَ أَيْدِيهِمْ وَمَا خَلْفَهُمْ ۖ وَلَا يُحِيطُونَ بِشَيْءٍ مِنْ عِلْمِهِ إِلَّا بِمَا شَاءَ ۚ وَسِعَ كُرْسِيُّهُ السَّمَاوَاتِ وَالْأَرْضَ ۖ وَلَا يَئُودُهُ حِفْظُهُمَا ۚ وَهُوَ الْعَلِيُّ الْعَظِيمُ",
+                    latin: "Allāhu lā ilāha illā huwal-ḥayyul-qayyūm...",
+                    translation: "Allah, tidak ada Tuhan (yang berhak disembah) melainkan Dia Yang Hidup kekal lagi terus menerus mengurus (makhluk-Nya)...",
+                    faedah: "Dibaca pagi & petang. Melindungi dari gangguan jin hingga pagi/sore berikutnya.",
+                    count: 1
+                },
+                {
+                    id: 2,
+                    title: "Al-Ikhlas",
+                    arabic: "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ\nقُلْ هُوَ اللَّهُ أَحَدٌ ۝ اللَّهُ الصَّمَدُ ۝ لَمْ يَلِدْ وَلَمْ يُولَدْ ۝ وَلَمْ يَكُنْ لَهُ كُفُوًا أَحَدٌ",
+                    latin: "Qul huwallāhu aḥad. Allāhuṣ-ṣamad...",
+                    translation: "Katakanlah: Dialah Allah, Yang Maha Esa...",
+                    faedah: "Barangsiapa membacanya 3x pagi dan petang, maka akan dicukupkan dari segala sesuatu.",
+                    count: 3
+                },
+                {
+                    id: 3,
+                    title: "Al-Falaq",
+                    arabic: "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ\nقُلْ أَعُوذُ بِرَبِّ الْفَلَقِ ۝ مِنْ شَرِّ مَا خَلَقَ ۝ وَمِنْ شَرِّ غَاسِقٍ إِذَا وَقَبَ ۝ وَمِنْ شَرِّ النَّفَّاثَاتِ فِي الْعُقَدِ ۝ وَمِنْ شَرِّ حَاسِدٍ إِذَا حَسَدَ",
+                    latin: "Qul a'ūżu birabbil-falaq...",
+                    translation: "Katakanlah: Aku berlindung kepada Tuhan Yang Menguasai subuh...",
+                    faedah: "Pelindung dari kejahatan makhluk dan hasad.",
+                    count: 3
+                },
+                {
+                    id: 4,
+                    title: "An-Naas",
+                    arabic: "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ\nقُلْ أَعُوذُ بِرَبِّ النَّاسِ ۝ مَلِكِ النَّاسِ ۝ إِلَٰهِ النَّاسِ ۝ مِنْ شَرِّ الْوَسْوَاسِ الْخَنَّاسِ ۝ الَّذِي يُوَسْوِسُ فِي صُدُورِ النَّاسِ ۝ مِنَ الْجِنَّةِ وَالنَّاسِ",
+                    latin: "Qul a'ūżu birabbin-nās...",
+                    translation: "Katakanlah: Aku berlindung kepada Tuhan (yang memelihara dan menguasai) manusia...",
+                    faedah: "Pelindung dari godaan syaitan.",
+                    count: 3
+                },
+                {
+                    id: 5,
+                    title: "Sayyidul Istighfar",
+                    arabic: "اللَّهُمَّ أَنْتَ رَبِّي لَا إِلَهَ إِلَّا أَنْتَ، خَلَقْتَنِي وَأَنَا عَبْدُكَ، وَأَنَا عَلَى عَهْدِكَ وَوَعْدِكَ مَا اسْتَطَعْتُ، أَعُوذُ بِكَ مِنْ شَرِّ مَا صَنَعْتُ، أَبُوءُ لَكَ بِنِعْمَتِكَ عَلَيَّ، وَأَبُوءُ بِذَنْبِي فَاغْفِرْ لِي فَإِنَّهُ لَا يَغْفِرُ الذُّنُوبَ إِلَّا أَنْتَ",
+                    latin: "Allahumma anta rabbi la ilaha illa anta...",
+                    translation: "Ya Allah, Engkau adalah Tuhanku, tidak ada Tuhan yang berhak disembah selain Engkau...",
+                    faedah: "Penghulu segala istighfar. Jika wafat hari itu, dijamin masuk surga.",
+                    count: 1
+                }
+            ],
+            dzikirPetang: [
+                 {
+                    id: 1,
+                    title: "Ayat Kursi",
+                    arabic: "اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ...",
+                    latin: "Allāhu lā ilāha illā huwal-ḥayyul-qayyūm...",
+                    translation: "(Lihat teks lengkap di Dzikir Pagi)",
+                    faedah: "Perlindungan hingga pagi hari.",
+                    count: 1
+                },
+                 {
+                    id: 2,
+                    title: "Doa Sore Hari",
+                    arabic: "أَمْسَيْنَا وَأَمْسَى الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ، لَا إِلَهَ إِلَّا اللهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ",
+                    latin: "Amsainā wa amsal-mulku lillāh...",
+                    translation: "Kami telah memasuki waktu sore dan kerajaan hanya milik Allah...",
+                    faedah: "Menyerahkan diri kepada Allah di waktu petang.",
+                    count: 1
+                }
+            ],
+            doaHarian: [
+                {
+                    id: 1,
+                    title: "Doa Sebelum Makan",
+                    arabic: "اللَّهُمَّ بَارِكْ لَنَا فِيمَا رَزَقْتَنَا وَقِنَا عَذَابَ النَّارِ، بِسْمِ اللَّهِ",
+                    latin: "Allāhumma bārik lanā fīmā razaqtanā...",
+                    translation: "Ya Allah, berkahilah kami dalam rezeki yang telah Engkau berikan kepada kami..."
+                },
+                {
+                    id: 2,
+                    title: "Doa Bangun Tidur",
+                    arabic: "الْحَمْدُ لِلَّهِ الَّذِي أَحْيَانَا بَعْدَ مَا أَمَاتَنَا وَإِلَيْهِ النُّشُورُ",
+                    latin: "Al-ḥamdu lillāhil-lażī aḥyānā ba'da mā amātanā wa ilaihin-nusyūr.",
+                    translation: "Segala puji bagi Allah, yang telah membangunkan kami setelah menidurkan kami..."
+                }
+            ],
+            dzikirShalat: [
+                {
+                    id: 1,
+                    title: "Istighfar (3x)",
+                    arabic: "أَسْتَغْفِرُ اللهَ الْعَظِـيْمَ الَّذِيْ لَااِلَهَ اِلَّا هُوَ الْحَيُّ الْقَيُّوْمُ وَأَتُوْبُ إِلَيْهِ",
+                    latin: "Astaghfirullahal 'azhim...",
+                    translation: "Aku memohon ampun kepada Allah Yang Maha Agung...",
+                    count: 3
+                },
+                {
+                    id: 2,
+                    title: "Tahlil & Doa Keselamatan",
+                    arabic: "اَللَّهُمَّ أَنْتَ السَّلاَمُ، وَمِنْكَ السَّلاَمُ، تَبَارَكْتَ يَا ذَا الْجَلاَلِ وَاْلإِكْرَامِ",
+                    latin: "Allahumma antas-salam wa minkas-salam...",
+                    translation: "Ya Allah, Engkau Mahasejahtera, dan dari-Mu kesejahteraan...",
+                    count: 1
+                },
+                {
+                    id: 3,
+                    title: "Tasbih, Tahmid, Takbir",
+                    arabic: "سُبْحَانَ اللهِ (٣٣×)   الْحَمْدُ لِلَّهِ (٣٣×)   اللهُ أَكْبَرُ (٣٣×)",
+                    latin: "Subhanallah (33x), Alhamdulillah (33x), Allahu Akbar (33x)",
+                    translation: "Maha Suci Allah, Segala Puji bagi Allah, Allah Maha Besar.",
+                    count: 33
+                }
+            ],
+            doaQurani: [
+                {
+                    id: 1,
+                    title: "Doa Sapu Jagat",
+                    arabic: "رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ",
+                    source: "QS. Al-Baqarah: 201",
+                    translation: "Ya Tuhan kami, berilah kami kebaikan di dunia dan kebaikan di akhirat dan peliharalah kami dari siksa neraka."
+                },
+                {
+                    id: 2,
+                    title: "Doa Mohon Kesabaran",
+                    arabic: "رَبَّنَا أَفْرِغْ عَلَيْنَا صَبْرًا وَثَبِّتْ أَقْدَامَنَا وَانْصُرْنَا عَلَى الْقَوْمِ الْكَافِرِينَ",
+                    source: "QS. Al-Baqarah: 250",
+                    translation: "Ya Tuhan kami, tuangkanlah kesabaran atas diri kami, dan kokohkanlah pendirian kami..."
+                },
+                {
+                    id: 3,
+                    title: "Doa Agar Keluarga Sakinah",
+                    arabic: "رَبَّنَا هَبْ لَنَا مِنْ أَزْوَاجِنَا وَذُرِّيَّاتِنَا قُرَّةَ أَعْيُنٍ وَاجْعَلْنَا لِلْمُتَّقِينَ إِمَامًا",
+                    source: "QS. Al-Furqan: 74",
+                    translation: "Ya Tuhan kami, anugrahkanlah kepada kami isteri-isteri kami dan keturunan kami sebagai penyenang hati..."
+                }
+            ],
+            belajarTajwid: [
+                {
+                    id: 1,
+                    title: "Hukum Nun Mati & Tanwin",
+                    content: "Nun mati (نْ) atau Tanwin (ــًــٍــٌ) jika bertemu huruf hijaiyah memiliki 4 hukum: Idzhar, Idgham, Iqlab, dan Ikhfa.",
+                    example: "مَنْ آمَنَ (Idzhar - Jelas)"
+                },
+                {
+                    id: 2,
+                    title: "Qalqalah (Pantulan)",
+                    content: "Memantulkan bunyi huruf tertentu (ب ج د ط ق) saat sukun. Terbagi menjadi Sugra (kecil di tengah) dan Kubra (besar di akhir).",
+                    example: "قُلْ هُوَ اللَّهُ أَحَدٌ (Kubra)"
+                },
+                {
+                    id: 3,
+                    title: "Ghunnah (Dengung)",
+                    content: "Suara mendengung ditahan 2 harakat pada huruf Mim dan Nun yang bertasydid.",
+                    example: "إِنَّ الَّذِينَ"
+                }
+            ]
+        };
+
+        // ==========================================
+        // 2. STATE & ROUTER
+        // ==========================================
+        const AppState = {
+            currentView: 'home',
+            data: null,
+            currentIndex: 0,
+            isRTL: false
+        };
+
+        const root = document.getElementById('app-root');
+
+        function navigateTo(viewName, params = null) {
+            // Simple fade transition
+            root.style.opacity = '0.7';
+            
+            setTimeout(() => {
+                AppState.currentView = viewName;
+                AppState.currentIndex = 0; // Reset
+                render(viewName, params);
+                root.style.opacity = '1';
+                root.scrollTop = 0;
+            }, 100);
+        }
+
+        function render(view, params) {
+            root.innerHTML = '';
+            
+            switch(view) {
+                case 'home':
+                    renderHome();
+                    break;
+                case 'slider':
+                    renderSliderView(params.type, params.title, params.rtl);
+                    break;
+                case 'list':
+                    renderListView(params.type, params.title);
+                    break;
+                default:
+                    renderHome();
+            }
+        }
+
+        // ==========================================
+        // 3. UI RENDERERS
+        // ==========================================
+
+        // --- HOME SCREEN ---
+        function renderHome() {
+            const hour = new Date().getHours();
+            let greeting = "Assalamualaikum";
+            let subGreeting = "Selamat Pagi";
+            
+            if (hour >= 10 && hour < 15) subGreeting = "Selamat Siang";
+            else if (hour >= 15 && hour < 18) subGreeting = "Selamat Sore";
+            else if (hour >= 18) subGreeting = "Selamat Malam";
+
+            const quotes = [
+                "Basahi lisanmu dengan Dzikir.",
+                "Shalat adalah tiang agama.",
+                "Allah mencintai hamba yang bersyukur.",
+                "Ingatlah Allah, hati akan tenang."
+            ];
+            const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+
+            const html = `
+                <div class="h-full flex flex-col islamic-pattern relative animate-fade-in">
+                    <!-- Hero Section -->
+                    <div class="pt-14 pb-8 px-6 text-center z-10">
+                        <p class="text-emerald-600 font-medium text-xs tracking-[0.2em] uppercase mb-2 opacity-90">${greeting}</p>
+                        <h1 class="text-3xl font-bold text-slate-800 mb-3 tracking-tight">${subGreeting}</h1>
+                        <div class="h-1 w-12 bg-emerald-200 mx-auto rounded-full mb-3"></div>
+                        <p class="text-slate-500 text-sm font-light italic">"${randomQuote}"</p>
+                    </div>
+
+                    <!-- Menu Grid -->
+                    <div class="flex-grow overflow-y-auto hide-scrollbar px-5 pb-24">
+                        <div class="grid grid-cols-2 gap-4">
+                            ${MenuCard("Dzikir Pagi", "fa-sun", "slider", {type: 'dzikirPagi', title: 'Dzikir Pagi', rtl: true})}
+                            ${MenuCard("Dzikir Petang", "fa-cloud-moon", "slider", {type: 'dzikirPetang', title: 'Dzikir Petang', rtl: true})}
+                            ${MenuCard("Doa Qurani", "fa-quran", "slider", {type: 'doaQurani', title: 'Doa-Doa Qurani', rtl: true})}
+                            ${MenuCard("Doa Harian", "fa-hands-praying", "slider", {type: 'doaHarian', title: 'Doa Harian', rtl: false})}
+                            ${MenuCard("Dzikir Shalat", "fa-mosque", "slider", {type: 'dzikirShalat', title: 'Dzikir Setelah Shalat', rtl: true})} 
+                            ${MenuCard("Belajar Tajwid", "fa-book-open", "list", {type: 'belajarTajwid', title: 'Belajar Tajwid'})}
+                        </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="absolute bottom-0 w-full p-4 bg-gradient-to-t from-white via-white to-transparent text-center z-20 pointer-events-none">
+                        <p class="text-[10px] text-gray-400 font-medium tracking-wide uppercase">© Ahmad Dawami</p>
+                    </div>
+                </div>
+            `;
+            root.innerHTML = html;
+        }
+
+        function MenuCard(title, icon, targetView, params) {
+            const paramsStr = JSON.stringify(params).replace(/"/g, "&quot;");
+            return `
+                <button onclick="navigateTo('${targetView}', ${paramsStr})" 
+                    class="ripple group bg-white p-5 rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.05)] border border-gray-100 flex flex-col items-center justify-center gap-3 transition-all active:scale-95 active:shadow-inner hover:border-emerald-200 h-36 relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-1 bg-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl group-hover:bg-emerald-600 group-hover:text-white transition-colors duration-300">
+                        <i class="fa-solid ${icon}"></i>
+                    </div>
+                    <span class="text-sm font-semibold text-slate-700 leading-tight">${title}</span>
+                </button>
+            `;
+        }
+
+        // --- SLIDER VIEW (RE-ENGINEERED FOR RTL) ---
+        function renderSliderView(dataType, title, isRTL) {
+            const data = DB[dataType] || [];
+            AppState.data = data;
+            AppState.currentIndex = 0;
+            AppState.isRTL = isRTL;
+
+            // RTL Logic:
+            // If RTL, we use flex-row-reverse.
+            // This places Item 0 on the Right. Item 1 to its Left.
+            // To see Item 1, we must translate Track to the Positive X (Right).
+            const flexDir = isRTL ? 'flex-row-reverse' : 'flex-row';
+            
+            // Width Logic:
+            // Track Width must hold ALL items. 
+            // Item Width must be 100 / length %.
+            const trackWidth = data.length * 100;
+
+            const html = `
+                <div class="h-full flex flex-col bg-white animate-fade-in relative">
+                    <!-- Header -->
+                    <div class="flex items-center justify-between px-4 py-4 border-b border-gray-100 z-30 bg-white/95 backdrop-blur-sm sticky top-0">
+                        <button onclick="navigateTo('home')" class="w-10 h-10 flex items-center justify-center text-slate-500 hover:bg-gray-50 rounded-full transition-colors">
+                            <i class="fa-solid fa-arrow-left"></i>
+                        </button>
+                        <h2 class="text-lg font-bold text-slate-800 tracking-tight">${title}</h2>
+                        <div class="w-10 h-10 flex items-center justify-center text-emerald-600 font-bold text-xs bg-emerald-50 rounded-full">
+                            <span id="slide-indicator">1/${data.length}</span>
+                        </div>
+                    </div>
+
+                    <!-- Slider Viewport -->
+                    <div class="flex-grow relative overflow-hidden slider-viewport bg-slate-50">
+                        <!-- Track -->
+                        <div id="slides-track" class="h-full flex ${flexDir} items-stretch transition-transform duration-300 ease-out will-change-transform" 
+                             style="width: ${trackWidth}%; touch-action: pan-y;">
+                            ${data.map((item, index) => SliderCard(item, data.length)).join('')}
+                        </div>
+                    </div>
+
+                    <!-- Controls -->
+                    <div class="p-5 pb-8 border-t border-gray-100 bg-white z-30 flex justify-between items-center shadow-[0_-4px_20px_rgba(0,0,0,0.03)]">
+                        <!-- Prev Button (Visual Left) -->
+                        <button onclick="handleNavClick(-1)" class="w-14 h-14 rounded-full bg-slate-50 text-slate-600 hover:bg-slate-100 flex items-center justify-center text-lg active:scale-95 transition-all">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </button>
+                        
+                        <!-- Play/Action Button (Optional Decor) -->
+                        <div class="flex flex-col items-center">
+                            <span class="text-[10px] text-gray-400 uppercase tracking-widest mb-1">Halaman</span>
+                            <div class="flex gap-1">
+                                ${data.map((_, i) => `<div id="dot-${i}" class="w-1.5 h-1.5 rounded-full ${i===0?'bg-emerald-500':'bg-gray-300'} transition-colors"></div>`).join('')}
+                            </div>
+                        </div>
+                        
+                        <!-- Next Button (Visual Right) -->
+                        <button onclick="handleNavClick(1)" class="w-14 h-14 rounded-full bg-emerald-600 text-white shadow-lg shadow-emerald-200 flex items-center justify-center text-lg active:scale-95 active:bg-emerald-700 transition-all">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            root.innerHTML = html;
+            
+            // Initialize Swipe
+            initSwipeLogic();
+        }
+
+        function SliderCard(item, totalItems) {
+            // Precise width calculation to fit exactly one screen
+            const width = 100 / totalItems;
+            
+            const faedah = item.faedah ? 
+                `<div class="mt-6 mx-4 p-4 bg-amber-50 rounded-xl text-sm text-amber-900 border border-amber-100 leading-relaxed shadow-sm">
+                    <strong class="block text-amber-700 mb-1 text-xs uppercase tracking-wide"><i class="fa-solid fa-star mr-1"></i> Keutamaan</strong>
+                    ${item.faedah}
+                </div>` : "";
+            
+            const count = item.count ? 
+                `<div class="inline-flex items-center justify-center bg-emerald-100 text-emerald-700 font-bold text-xs px-3 py-1.5 rounded-full mb-6 shadow-sm">
+                    <i class="fa-solid fa-rotate mr-2 text-[10px]"></i> Baca ${item.count}x
+                </div>` : "";
+            
+            const source = item.source ? 
+                `<span class="block text-xs text-slate-400 font-medium uppercase tracking-wider mb-2">${item.source}</span>` : "";
+
+            return `
+                <div class="h-full flex-shrink-0 overflow-y-auto hide-scrollbar pb-20 flex flex-col items-center" style="width: ${width}%">
+                    <!-- Wrapper for vertical centering (using margin-auto safe approach) -->
+                    <div class="w-full min-h-full flex flex-col items-center py-8">
+                        <div class="my-auto w-full flex flex-col items-center">
+                            
+                            ${count}
+                            ${source}
+                            <h3 class="text-emerald-700 font-bold text-lg mb-8 text-center px-4 leading-tight max-w-xs mx-auto">${item.title}</h3>
+                            
+                            <!-- ARABIC TEXT AREA (Large Font) -->
+                            <div class="w-full px-4 mb-8 text-center" dir="rtl">
+                                <p class="font-arabic text-4xl md:text-5xl text-slate-800 leading-[2.5] tracking-wide drop-shadow-sm select-text">
+                                    ${item.arabic}
+                                </p>
+                            </div>
+
+                            <!-- TRANSLATION AREA -->
+                            <div class="w-full max-w-sm px-6 text-center pb-8 mx-auto">
+                                ${item.latin ? `<p class="text-[15px] text-emerald-700 font-medium italic mb-4 leading-relaxed opacity-90">${item.latin}</p>` : ''}
+                                <p class="text-[15px] text-slate-600 leading-7 font-light">${item.translation}</p>
+                                ${faedah}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- LIST VIEW (TAJWID) ---
+        function renderListView(dataType, title) {
+            const data = DB[dataType] || [];
+            const html = `
+                <div class="h-full flex flex-col bg-slate-50 animate-fade-in">
+                    <div class="flex items-center gap-4 p-4 bg-white shadow-sm sticky top-0 z-30">
+                        <button onclick="navigateTo('home')" class="text-slate-500 hover:text-emerald-600 w-8 h-8 flex items-center justify-center">
+                            <i class="fa-solid fa-arrow-left text-lg"></i>
+                        </button>
+                        <h2 class="text-lg font-bold text-slate-800">${title}</h2>
+                    </div>
+                    <div class="flex-grow overflow-y-auto p-4 space-y-4 pb-20">
+                        ${data.map(item => `
+                            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                                <h3 class="font-bold text-emerald-700 mb-2 text-lg">${item.title}</h3>
+                                <p class="text-slate-600 text-[15px] leading-relaxed mb-4">${item.content}</p>
+                                <div class="bg-emerald-50/50 p-4 rounded-xl border border-emerald-100 flex flex-col items-center gap-2">
+                                    <span class="text-[10px] text-emerald-600 font-bold uppercase tracking-wider bg-white px-2 py-0.5 rounded shadow-sm">Contoh</span>
+                                    <span class="font-arabic text-3xl text-slate-800 mt-1">${item.example}</span>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            root.innerHTML = html;
+        }
+
+
+        // ==========================================
+        // 4. SLIDER ENGINE (RTL & LTR LOGIC)
+        // ==========================================
+        
+        function updateSlidePosition() {
+            const track = document.getElementById('slides-track');
+            if(!track) return;
+
+            const isRTL = AppState.isRTL;
+            const index = AppState.currentIndex;
+            const length = AppState.data.length;
+
+            // CORE RTL LOGIC:
+            // LTR Mode: flex-direction: row. To go to index 1, translateX(-100% / Length).
+            // RTL Mode: flex-direction: row-reverse.
+            
+            let translateX = 0;
+            const step = 100 / length; // e.g. 33.33% for 3 items
+
+            if (isRTL) {
+                // Move RIGHT (Positive) to see items on the left
+                translateX = index * step; 
+            } else {
+                // Move LEFT (Negative) to see items on the right
+                translateX = -(index * step);
+            }
+
+            track.style.transform = `translateX(${translateX}%)`;
+
+            // Update Text Indicator
+            document.getElementById('slide-indicator').innerText = `${index + 1}/${length}`;
+
+            // Update Dots
+            AppState.data.forEach((_, i) => {
+                const dot = document.getElementById(`dot-${i}`);
+                if(dot) {
+                    dot.classList.toggle('bg-emerald-500', i === index);
+                    dot.classList.toggle('bg-gray-300', i !== index);
+                }
+            });
+        }
+
+        // Unified Handler for Buttons
+        window.handleNavClick = function(direction) {
+            let indexChange = direction;
+            
+            if (AppState.isRTL) {
+                // In RTL Mode, Left Button (-1) means "Go Left" -> Show Next Page
+                // Right Button (+1) means "Go Right" -> Show Prev Page
+                indexChange = -direction; 
+            }
+
+            // Apply Change
+            let nextIndex = AppState.currentIndex + indexChange;
+            
+            // Bounds Check
+            if (nextIndex >= 0 && nextIndex < AppState.data.length) {
+                AppState.currentIndex = nextIndex;
+                updateSlidePosition();
+            }
+        }
+
+        function initSwipeLogic() {
+            const wrapper = document.querySelector('.slider-viewport');
+            let startX = 0;
+            let isDragging = false;
+            
+            wrapper.addEventListener('touchstart', (e) => {
+                startX = e.touches[0].clientX;
+                isDragging = true;
+            }, {passive: true});
+
+            wrapper.addEventListener('touchend', (e) => {
+                if (!isDragging) return;
+                isDragging = false;
+                
+                const endX = e.changedTouches[0].clientX;
+                const diff = startX - endX; // Positive = Swipe Left, Negative = Swipe Right
+                const threshold = 50;
+
+                if (Math.abs(diff) > threshold) {
+                    if (diff > 0) {
+                        // SWIPE LEFT
+                        if (AppState.isRTL) {
+                            handleNavClick(1); // Visual Right button logic (Prev)
+                        } else {
+                            handleNavClick(1); // Visual Right button logic (Next)
+                        }
+                    } else {
+                        // SWIPE RIGHT
+                        if (AppState.isRTL) {
+                            handleNavClick(-1); // Visual Left button logic (Next)
+                        } else {
+                            handleNavClick(-1); // Visual Left button logic (Prev)
+                        }
+                    }
+                }
+            });
+        }
+
+        // ==========================================
+        // 5. BOOTSTRAP
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', () => {
+            renderHome();
+        });
+
+    </script>
+</body>
+</html>
+
+

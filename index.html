@@ -60,7 +60,7 @@
 
         .font-arabic {
             font-family: var(--font-arabic);
-            line-height: 3.2; 
+            line-height: 2.2; /* PERBAIKAN: Jarak baris dirapatkan agar lebih presisi */
             font-feature-settings: "kern" 1, "liga" 1;
             font-weight: normal !important;
         }
@@ -134,14 +134,11 @@
                 });
 
                 // 2. ULTRA STRICT FILTER (Membuang baris kosong)
-                // Hanya ambil item yang memiliki Teks Arab minimal 3 karakter
-                // ATAU Judul minimal 2 karakter (untuk doa harian/tajwid)
                 normalized[sheetName] = mappedArray.filter(item => {
                     const arab = item.arabic ? item.arabic.toString().trim() : "";
                     const title = item.title ? item.title.toString().trim() : "";
                     const content = item.content ? item.content.toString().trim() : "";
                     
-                    // Kondisi: Harus ada isi yang valid
                     const isValidRow = (arab.length > 3) || (title.length > 2) || (content.length > 3);
                     
                     return isValidRow;
@@ -324,8 +321,8 @@
                 return;
             }
 
-            // REVISI: Menggunakan flex-row biasa untuk urutan natural (Slide 1 -> Slide 2)
-            // Tidak dibalik, agar slide 1 (awal) muncul pertama kali.
+            // PERBAIKAN RTL: Gunakan row-reverse agar urutan DOM (Page 2 di kiri Page 1) sesuai
+            const flexDir = isRTL ? 'flex-row-reverse' : 'flex-row';
             const trackWidth = data.length * 100;
 
             const html = `
@@ -341,8 +338,7 @@
                     </div>
 
                     <div class="flex-grow relative overflow-hidden slider-viewport bg-slate-50">
-                        <!-- Removed flex-row-reverse to fix order -->
-                        <div id="slides-track" class="h-full flex flex-row items-stretch transition-transform duration-300 ease-out will-change-transform" 
+                        <div id="slides-track" class="h-full flex ${flexDir} items-stretch transition-transform duration-300 ease-out will-change-transform" 
                              style="width: ${trackWidth}%; touch-action: pan-y;">
                             ${data.map((item) => SliderCard(item, data.length)).join('')}
                         </div>
@@ -365,13 +361,20 @@
             `;
             root.innerHTML = html;
             initSwipeLogic();
-            window.addEventListener('resize', updateSlidePosition);
+            
+            // Perbaikan Posisi Awal untuk RTL (Agar halaman 1 muncul duluan)
+            if (isRTL) {
+                // Dalam row-reverse, item[0] ada di paling kanan. Kita perlu menggeser track ke kiri 
+                // sejauh (N-1) unit agar item[0] terlihat di viewport.
+                updateSlidePosition();
+            } else {
+                window.addEventListener('resize', updateSlidePosition);
+            }
         }
 
         function SliderCard(item, totalItems) {
             const width = 100 / totalItems;
             
-            // Fallback content jika data undefined
             const title = item.title || "";
             const arabic = item.arabic || "";
             const latin = item.latin ? `<p class="text-[15px] text-emerald-700 font-medium italic mb-4 leading-relaxed opacity-90">${item.latin}</p>` : '';
@@ -398,7 +401,7 @@
                             ${source}
                             <h3 class="text-emerald-700 font-bold text-lg mb-6 text-center leading-tight">${title}</h3>
                             <div class="w-full mb-8 text-center" dir="rtl">
-                                <p class="font-arabic text-[2.5rem] md:text-[3.2rem] text-black leading-[3.2] tracking-wide drop-shadow-sm select-text">
+                                <p class="font-arabic text-[2.5rem] md:text-[3.2rem] text-black leading-[2.2] tracking-wide drop-shadow-sm select-text">
                                     ${arabic}
                                 </p>
                             </div>
@@ -458,10 +461,26 @@
 
             const index = AppState.currentIndex;
             const length = AppState.data.length;
+            const isRTL = AppState.isRTL;
 
-            // Simplified: Always translate standard X
+            let translateX = 0;
             const step = 100 / length; 
-            const translateX = -(index * step);
+
+            if (isRTL) {
+                // LOGIKA RTL:
+                // Kita menggunakan row-reverse: [Item N] ... [Item 1] [Item 0].
+                // Item 0 ada di ujung KANAN track.
+                // Untuk melihat Item 0, kita harus menggeser track ke kiri (negatif) sebesar (N-1) unit.
+                // Untuk melihat Item 1 (di kiri Item 0), kita geser (N-2) unit.
+                // Rumus: -(Length - 1 - Index) * Step
+                translateX = - (length - 1 - index) * step;
+            } else {
+                // LOGIKA LTR:
+                // [Item 0] [Item 1] ...
+                // Item 0 ada di ujung KIRI.
+                // Rumus: -(Index) * Step
+                translateX = -(index * step);
+            }
 
             track.style.transform = `translateX(${translateX}%)`;
 
@@ -478,6 +497,7 @@
         }
 
         window.handleNavClick = function(direction) {
+            // Direction: 1 = Next (Visual Kiri di RTL), -1 = Prev (Visual Kanan di RTL)
             let nextIndex = AppState.currentIndex + direction;
             
             if (nextIndex >= 0 && nextIndex < AppState.data.length) {
@@ -505,11 +525,24 @@
                 const threshold = 50;
                 
                 if (Math.abs(diff) > threshold) {
-                    const isSwipeLeft = diff > 0;
-                    if (isSwipeLeft) {
-                        handleNavClick(1); // Next
+                    const isSwipeLeft = diff > 0; // Geser jari ke kiri -> Ingin lihat konten di KANAN
+                    
+                    if (AppState.isRTL) {
+                        // Di RTL (row-reverse), konten "Next" ada di KIRI.
+                        // Geser jari ke Kanan (Swipe Right, diff < 0) -> Reveal konten kiri -> Next
+                        if (!isSwipeLeft) { 
+                            handleNavClick(1); // Next
+                        } else {
+                            handleNavClick(-1); // Prev
+                        }
                     } else {
-                        handleNavClick(-1); // Prev
+                        // Di LTR, konten "Next" ada di KANAN.
+                        // Geser jari ke Kiri (Swipe Left, diff > 0) -> Reveal konten kanan -> Next
+                        if (isSwipeLeft) {
+                            handleNavClick(1); 
+                        } else {
+                            handleNavClick(-1);
+                        }
                     }
                 }
             });

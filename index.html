@@ -26,7 +26,6 @@
         /* --- TYPOGRAPHY SETUP --- */
         @font-face {
             font-family: 'LPMQ Isep Misbah';
-            /* MENGGUNAKAN FONT DARI GITHUB (RAW LINK) */
             src: url('https://raw.githubusercontent.com/dawamie87/Zikir-dan-Doa-Qur-ani/main/LPMQ_IsepMisbah.ttf') format('truetype');
             font-weight: normal;
             font-style: normal;
@@ -35,7 +34,6 @@
 
         :root {
             --font-ui: 'Inter', system-ui, -apple-system, sans-serif;
-            /* Prioritaskan LPMQ Isep Misbah */
             --font-arabic: 'LPMQ Isep Misbah', 'Scheherazade New', 'Amiri', serif;
             --primary: #047857; 
             --bg-light: #f8fafc;
@@ -43,7 +41,7 @@
 
         body {
             font-family: var(--font-ui);
-            background-color: #f1f5f9; /* Slate 100 for desktop bg */
+            background-color: #f1f5f9; 
             -webkit-tap-highlight-color: transparent;
             overscroll-behavior-y: none;
         }
@@ -60,33 +58,22 @@
             }
         }
 
-        /* Specialized Arabic Styling (LPMQ Optimized) */
         .font-arabic {
             font-family: var(--font-arabic);
-            line-height: 3.2; /* Ditingkatkan agar harakat tidak bertumpuk */
+            line-height: 3.2; 
             font-feature-settings: "kern" 1, "liga" 1;
-            font-weight: normal !important; /* LPMQ tidak cocok di-bold paksa */
+            font-weight: normal !important;
         }
 
-        /* Utility: Hide Scrollbar but keep functionality */
-        .hide-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        .hide-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* Animation */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .animate-fade-in {
-            animation: fadeIn 0.4s ease-out forwards;
-        }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
 
-        /* Islamic Pattern (Inside App) */
         .islamic-pattern {
             background-color: #ffffff;
             background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23047857' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
@@ -95,102 +82,136 @@
 </head>
 <body>
 
-    <!-- === APP CONTAINER === -->
-    <!-- 
-        Responsive Logic:
-        - Mobile: w-full h-screen (Full immersive)
-        - Desktop: max-w-lg (Tablet size), rounded corners, shadow (Floating App feel)
-    -->
     <main id="app-root" class="w-full h-screen bg-white shadow-2xl overflow-hidden relative
         md:h-[85vh] md:w-[480px] md:max-w-lg md:rounded-[2.5rem] md:border-8 md:border-white md:ring-1 md:ring-gray-200">
-        <!-- Content injected via JS -->
     </main>
 
-    <!-- === JAVASCRIPT LOGIC === -->
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-10 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white px-5 py-3 rounded-full text-xs font-medium shadow-lg opacity-0 transition-opacity duration-300 pointer-events-none z-50 flex items-center gap-2 w-max max-w-[90%]">
+        <i class="fa-solid fa-circle-notch fa-spin"></i>
+        <span id="toast-msg">Memuat data...</span>
+    </div>
+
     <script>
         // ==========================================
         // 1. DATABASE & CONFIG
         // ==========================================
         
-        // URL Google Apps Script yang sudah Anda berikan
+        // URL Backend Apps Script
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw8J1hsT-Nb9eBOwDWkPG9Iff6d6Vb9lThA0RjIioCorPRpD3A5oYQ8fIjgXcjQ8J8fAw/exec"; 
 
-        // Data Default (Offline/Fallback)
         let DB = {
-            dzikirPagi: [
-                {
-                    id: 1, title: "Ayat Kursi",
-                    arabic: "اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ ۚ لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ ۚ لَهُ مَا فِي السَّمَاوَاتِ وَمَا فِي الْأَرْضِ ۗ مَنْ ذَا الَّذِي يَشْفَعُ عِنْدَهُ إِلَّا بِإِذْنِهِ ۚ يَعْلَمُ مَا بَيْنَ أَيْدِيهِمْ وَمَا خَلْفَهُمْ ۖ وَلَا يُحِيطُونَ بِشَيْءٍ مِنْ عِلْمِهِ إِلَّا بِمَا شَاءَ ۚ وَسِعَ كُرْسِيُّهُ السَّمَاوَاتِ وَالْأَرْضَ ۖ وَلَا يَئُودُهُ حِفْظُهُمَا ۚ وَهُوَ الْعَلِيُّ الْعَظِيمُ",
-                    latin: "Allāhu lā ilāha illā huwal-ḥayyul-qayyūm...",
-                    translation: "Allah, tidak ada Tuhan (yang berhak disembah) melainkan Dia Yang Hidup kekal lagi terus menerus mengurus (makhluk-Nya)...",
-                    faedah: "Dibaca pagi & petang. Melindungi dari gangguan jin.",
-                    count: 1
-                },
-                {
-                    id: 2, title: "Al-Ikhlas",
-                    arabic: "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ\nقُلْ هُوَ اللَّهُ أَحَدٌ ۝ اللَّهُ الصَّمَدُ ۝ لَمْ يَلِدْ وَلَمْ يُولَدْ ۝ وَلَمْ يَكُنْ لَهُ كُفُوًا أَحَدٌ",
-                    translation: "Katakanlah: Dialah Allah, Yang Maha Esa...",
-                    faedah: "Mencukupkan segala sesuatu.",
-                    count: 3
-                },
-                {
-                    id: 3, title: "Al-Falaq",
-                    arabic: "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ\nقُلْ أَعُوذُ بِرَبِّ الْفَلَقِ ۝ مِنْ شَرِّ مَا خَلَقَ ۝ وَمِنْ شَرِّ غَاسِقٍ إِذَا وَقَبَ ۝ وَمِنْ شَرِّ النَّفَّاثَاتِ فِي الْعُقَدِ ۝ وَمِنْ شَرِّ حَاسِدٍ إِذَا حَسَدَ",
-                    translation: "Aku berlindung kepada Tuhan Yang Menguasai subuh...",
-                    count: 3
-                },
-                {
-                    id: 4, title: "An-Naas",
-                    arabic: "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ\nقُلْ أَعُوذُ بِرَبِّ النَّاسِ ۝ مَلِكِ النَّاسِ ۝ إِلَٰهِ النَّاسِ ۝ مِنْ شَرِّ الْوَسْوَاسِ الْخَنَّاسِ ۝ الَّذِي يُوَسْوِسُ فِي صُدُورِ النَّاسِ ۝ مِنَ الْجِنَّةِ وَالنَّاسِ",
-                    translation: "Aku berlindung kepada Tuhannya manusia...",
-                    count: 3
-                }
-            ],
-            dzikirPetang: [
-                 { id: 1, title: "Ayat Kursi", arabic: "اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ...", translation: "(Lihat teks lengkap di Dzikir Pagi)", count: 1 },
-                 { id: 2, title: "Doa Sore", arabic: "أَمْسَيْنَا وَأَمْسَى الْمُلْكُ لِلَّهِ...", translation: "Kami telah memasuki waktu sore...", count: 1 }
-            ],
-            doaHarian: [
-                { id: 1, title: "Doa Sebelum Makan", arabic: "اللَّهُمَّ بَارِكْ لَنَا فِيمَا رَزَقْتَنَا وَقِنَا عَذَابَ النَّارِ", translation: "Ya Allah berkahilah rezeki kami..." },
-                { id: 2, title: "Doa Bangun Tidur", arabic: "الْحَمْدُ لِلَّهِ الَّذِي أَحْيَانَا بَعْدَ مَا أَمَاتَنَا وَإِلَيْهِ النُّشُورُ", translation: "Segala puji bagi Allah yang menghidupkan kami..." }
-            ],
-            dzikirShalat: [
-                { id: 1, title: "Istighfar (3x)", arabic: "أَسْتَغْفِرُ اللهَ الْعَظِـيْمَ", translation: "Aku memohon ampun kepada Allah...", count: 3 },
-                { id: 2, title: "Tasbih, Tahmid, Takbir", arabic: "سُبْحَانَ اللهِ (٣٣×)   الْحَمْدُ لِلَّهِ (٣٣×)   اللهُ أَكْبَرُ (٣٣×)", translation: "Maha Suci Allah, Segala Puji bagi Allah, Allah Maha Besar.", count: 33 }
-            ],
-            doaQurani: [
-                { id: 1, title: "Doa Sapu Jagat", arabic: "رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ", source: "QS. Al-Baqarah: 201", translation: "Ya Tuhan kami, berilah kami kebaikan di dunia dan akhirat..." },
-                { id: 2, title: "Doa Kesabaran", arabic: "رَبَّنَا أَفْرِغْ عَلَيْنَا صَبْرًا وَثَبِّتْ أَقْدَامَنَا", source: "QS. Al-Baqarah: 250", translation: "Ya Tuhan kami, tuangkanlah kesabaran..." }
-            ],
-            belajarTajwid: [
-                { id: 1, title: "Idzhar Halqi", content: "Nun mati/tanwin bertemu (ء ه ع ح غ خ), dibaca JELAS.", example: "مَنْ آمَنَ" },
-                { id: 2, title: "Iqlab", content: "Nun mati/tanwin bertemu Ba (ب), bunyi N berubah jadi M.", example: "مِنْ بَعْدِ" }
-            ]
+            dzikirPagi: [], dzikirPetang: [], doaHarian: [], 
+            dzikirShalat: [], doaQurani: [], belajarTajwid: []
         };
 
-        // Fetch Data from Google Sheets
+        // --- SMART MAPPING & STRICT CLEANING ---
+        function smartNormalize(data) {
+            const normalized = {};
+            
+            const keyMap = {
+                'judul': 'title', 'nama': 'title', 'name': 'title',
+                'arab': 'arabic', 'arof': 'arabic', 'teks': 'arabic',
+                'latin': 'latin', 'bacaan': 'latin',
+                'terjemah': 'translation', 'terjemahan': 'translation', 'arti': 'translation',
+                'faedah': 'faedah', 'manfaat': 'faedah', 'keutamaan': 'faedah',
+                'jumlah': 'count', 'hitung': 'count', 'hitungan': 'count', 'kali': 'count',
+                'sumber': 'source', 'surat': 'source', 'ayat': 'source',
+                'isi': 'content', 'materi': 'content', 'konten': 'content',
+                'contoh': 'example', 'misal': 'example'
+            };
+
+            Object.keys(data).forEach(sheetName => {
+                // 1. Mapping Key
+                let mappedArray = data[sheetName].map(item => {
+                    const newItem = {};
+                    Object.keys(item).forEach(rawKey => {
+                        const lowerKey = rawKey.toString().toLowerCase().trim();
+                        const finalKey = keyMap[lowerKey] || lowerKey;
+                        newItem[finalKey] = item[rawKey];
+                    });
+                    return newItem;
+                });
+
+                // 2. ULTRA STRICT FILTER (Membuang baris kosong)
+                // Hanya ambil item yang memiliki Teks Arab minimal 3 karakter
+                // ATAU Judul minimal 2 karakter (untuk doa harian/tajwid)
+                normalized[sheetName] = mappedArray.filter(item => {
+                    const arab = item.arabic ? item.arabic.toString().trim() : "";
+                    const title = item.title ? item.title.toString().trim() : "";
+                    const content = item.content ? item.content.toString().trim() : "";
+                    
+                    // Kondisi: Harus ada isi yang valid
+                    const isValidRow = (arab.length > 3) || (title.length > 2) || (content.length > 3);
+                    
+                    return isValidRow;
+                });
+            });
+            return normalized;
+        }
+
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-msg');
+            const icon = toast.querySelector('i');
+            
+            if(toast && toastMsg) {
+                toastMsg.innerText = msg;
+                toast.classList.remove('opacity-0');
+                
+                if(isError) {
+                    toast.classList.replace('bg-slate-800', 'bg-red-600');
+                    icon.className = "fa-solid fa-triangle-exclamation";
+                } else if (msg.includes("Berhasil")) {
+                    toast.classList.replace('bg-slate-800', 'bg-emerald-600');
+                    icon.className = "fa-solid fa-check";
+                    setTimeout(() => toast.classList.add('opacity-0'), 3000);
+                } else {
+                    icon.className = "fa-solid fa-circle-notch fa-spin";
+                }
+            }
+        }
+
         async function fetchData() {
             if(!SCRIPT_URL) return;
+            
+            showToast("Menghubungkan Database...");
+
             try {
-                // Gunakan cache buster agar data selalu fresh saat reload
                 const response = await fetch(SCRIPT_URL + "?t=" + new Date().getTime());
+                
+                if (!response.ok) throw new Error("Gagal terhubung ke Google");
+                
                 const json = await response.json();
                 
                 if (json && Object.keys(json).length > 0) {
-                    DB = json;
-                    console.log("Data berhasil dimuat dari Spreadsheet");
-                }
-                
-                if (AppState.currentView !== 'home') {
-                    // Refresh view if user is already looking at something
-                   render(AppState.currentView, { 
-                       type: AppState.currentView === 'slider' ? 'dzikirPagi' : 'belajarTajwid',
-                       title: 'Dzikir Pagi',
-                       rtl: true 
-                   });
+                    // Normalisasi dan Filter Data
+                    DB = smartNormalize(json); 
+                    
+                    // Hitung total data nyata
+                    const totalRealItems = Object.values(DB).reduce((acc, arr) => acc + arr.length, 0);
+                    
+                    console.log("Data bersih:", DB);
+
+                    if (totalRealItems > 0) {
+                        showToast("Data Berhasil Diperbarui!");
+                    } else {
+                         showToast("Data Kosong (Cek Spreadsheet)", true);
+                    }
+                    
+                    if (AppState.currentView !== 'home') {
+                       render(AppState.currentView, { 
+                           type: AppState.currentView === 'slider' ? 'dzikirPagi' : 'belajarTajwid',
+                           title: 'Dzikir Pagi',
+                           rtl: true 
+                       });
+                    }
+                } else {
+                    throw new Error("Format data tidak sesuai");
                 }
             } catch (error) {
-                console.log("Mode Offline / Demo Data Active", error);
+                console.error("Fetch Error:", error);
+                showToast("Gagal mengambil data. Cek Izin Deploy.", true);
             }
         }
 
@@ -244,13 +265,9 @@
                 "Ingatlah Allah, hati akan tenang."
             ];
             const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
-
-            // RESPONSIVE GRID: grid-cols-2 (Mobile) -> grid-cols-3 (Desktop/Tablet)
-            // MENU HEIGHT: Fixed height for consistent layout
             
             const html = `
                 <div class="h-full flex flex-col islamic-pattern relative animate-fade-in bg-white">
-                    <!-- Hero Section -->
                     <div class="pt-12 pb-6 px-6 text-center z-10">
                         <p class="text-emerald-600 font-medium text-xs tracking-[0.2em] uppercase mb-2 opacity-90">${greeting}</p>
                         <h1 class="text-3xl md:text-4xl font-bold text-slate-800 mb-3 tracking-tight">${subGreeting}</h1>
@@ -258,7 +275,6 @@
                         <p class="text-slate-500 text-sm font-light italic">"${randomQuote}"</p>
                     </div>
 
-                    <!-- Menu Grid Container -->
                     <div class="flex-grow overflow-y-auto hide-scrollbar px-6 pb-24">
                         <div class="grid grid-cols-2 md:grid-cols-2 gap-4 auto-rows-fr">
                             ${MenuCard("Dzikir Pagi", "fa-sun", "slider", {type: 'dzikirPagi', title: 'Dzikir Pagi', rtl: true})}
@@ -270,7 +286,6 @@
                         </div>
                     </div>
 
-                    <!-- Footer -->
                     <div class="absolute bottom-0 w-full p-4 bg-gradient-to-t from-white via-white to-transparent text-center z-20 pointer-events-none">
                         <p class="text-[10px] text-gray-400 font-medium tracking-wide uppercase">© Ahmad Dawami</p>
                     </div>
@@ -281,7 +296,6 @@
 
         function MenuCard(title, icon, targetView, params) {
             const paramsStr = JSON.stringify(params).replace(/"/g, "&quot;");
-            // Improved Card UI for Desktop hover states
             return `
                 <button onclick="navigateTo('${targetView}', ${paramsStr})" 
                     class="group relative bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center gap-3 transition-all duration-300 hover:shadow-md hover:border-emerald-200 hover:-translate-y-1 h-32 md:h-36">
@@ -299,12 +313,23 @@
             AppState.currentIndex = 0;
             AppState.isRTL = isRTL;
 
-            const flexDir = isRTL ? 'flex-row-reverse' : 'flex-row';
+            if (data.length === 0) {
+                root.innerHTML = `
+                    <div class="h-full flex flex-col items-center justify-center bg-white p-10 text-center">
+                         <i class="fa-solid fa-triangle-exclamation text-4xl text-amber-500 mb-4"></i>
+                         <h3 class="text-xl font-bold text-slate-800 mb-2">Data Kosong</h3>
+                         <p class="text-sm text-slate-500 mb-6">Pastikan Sheet <strong>${dataType}</strong> terisi data dengan benar dan tidak ada baris kosong di awal.</p>
+                         <button onclick="navigateTo('home')" class="px-6 py-2 bg-emerald-600 text-white rounded-full font-medium">Kembali</button>
+                    </div>`;
+                return;
+            }
+
+            // REVISI: Menggunakan flex-row biasa untuk urutan natural (Slide 1 -> Slide 2)
+            // Tidak dibalik, agar slide 1 (awal) muncul pertama kali.
             const trackWidth = data.length * 100;
 
             const html = `
                 <div class="h-full flex flex-col bg-white animate-fade-in relative">
-                    <!-- Header -->
                     <div class="flex items-center justify-between px-4 py-4 border-b border-gray-100 z-30 bg-white/95 backdrop-blur-sm sticky top-0 h-16">
                         <button onclick="navigateTo('home')" class="w-10 h-10 flex items-center justify-center text-slate-500 hover:bg-slate-100 rounded-full transition-colors">
                             <i class="fa-solid fa-arrow-left"></i>
@@ -315,16 +340,14 @@
                         </div>
                     </div>
 
-                    <!-- Slider Viewport -->
                     <div class="flex-grow relative overflow-hidden slider-viewport bg-slate-50">
-                        <!-- Track -->
-                        <div id="slides-track" class="h-full flex ${flexDir} items-stretch transition-transform duration-300 ease-out will-change-transform" 
+                        <!-- Removed flex-row-reverse to fix order -->
+                        <div id="slides-track" class="h-full flex flex-row items-stretch transition-transform duration-300 ease-out will-change-transform" 
                              style="width: ${trackWidth}%; touch-action: pan-y;">
                             ${data.map((item) => SliderCard(item, data.length)).join('')}
                         </div>
                     </div>
 
-                    <!-- Controls -->
                     <div class="p-5 pb-8 border-t border-gray-100 bg-white z-30 flex justify-between items-center shadow-[0_-4px_20px_rgba(0,0,0,0.03)] h-24">
                         <button onclick="handleNavClick(-1)" class="w-12 h-12 rounded-full bg-slate-50 text-slate-600 hover:bg-slate-200 flex items-center justify-center text-lg active:scale-95 transition-all">
                             <i class="fa-solid fa-chevron-left"></i>
@@ -342,15 +365,17 @@
             `;
             root.innerHTML = html;
             initSwipeLogic();
-            
-            // Re-calc on resize to prevent drift
             window.addEventListener('resize', updateSlidePosition);
         }
 
         function SliderCard(item, totalItems) {
-            // Precise width: 100% of the VIEWPORT width (which is 100/totalItems % of the TRACK width)
             const width = 100 / totalItems;
             
+            // Fallback content jika data undefined
+            const title = item.title || "";
+            const arabic = item.arabic || "";
+            const latin = item.latin ? `<p class="text-[15px] text-emerald-700 font-medium italic mb-4 leading-relaxed opacity-90">${item.latin}</p>` : '';
+            const translation = item.translation || "";
             const faedah = item.faedah ? 
                 `<div class="mt-6 mx-4 p-4 bg-amber-50 rounded-xl text-sm text-amber-900 border border-amber-100 leading-relaxed shadow-sm">
                     <strong class="block text-amber-700 mb-1 text-xs uppercase tracking-wide"><i class="fa-solid fa-star mr-1"></i> Keutamaan</strong>
@@ -367,33 +392,19 @@
 
             return `
                 <div class="h-full flex-shrink-0 overflow-y-auto hide-scrollbar flex flex-col items-center relative" style="width: ${width}%">
-                    <!-- 
-                        RESPONSIVE CONTENT:
-                        - Mobile: px-4 (standard padding)
-                        - Desktop: max-w-sm (prevent text from getting too wide)
-                    -->
                     <div class="w-full h-full flex flex-col items-center py-8 px-4 md:px-8">
                         <div class="my-auto w-full flex flex-col items-center max-w-md">
-                            
                             ${count}
                             ${source}
-                            <h3 class="text-emerald-700 font-bold text-lg mb-6 text-center leading-tight">${item.title}</h3>
-                            
-                            <!-- ARABIC TEXT: Fixed Desktop Overflow.
-                                 Mobile: text-[2.5rem] (approx 40px)
-                                 Desktop: text-[3.2rem] (approx 51px) for prominence
-                                 Line-height: leading-[3.2] for LPMQ spacing
-                            -->
+                            <h3 class="text-emerald-700 font-bold text-lg mb-6 text-center leading-tight">${title}</h3>
                             <div class="w-full mb-8 text-center" dir="rtl">
                                 <p class="font-arabic text-[2.5rem] md:text-[3.2rem] text-black leading-[3.2] tracking-wide drop-shadow-sm select-text">
-                                    ${item.arabic}
+                                    ${arabic}
                                 </p>
                             </div>
-
-                            <!-- TRANSLATION AREA -->
                             <div class="w-full text-center pb-8">
-                                ${item.latin ? `<p class="text-[15px] text-emerald-700 font-medium italic mb-4 leading-relaxed opacity-90">${item.latin}</p>` : ''}
-                                <p class="text-[15px] md:text-base text-slate-600 leading-7 font-light">${item.translation}</p>
+                                ${latin}
+                                <p class="text-[15px] md:text-base text-slate-600 leading-7 font-light">${translation}</p>
                                 ${faedah}
                             </div>
                         </div>
@@ -404,6 +415,18 @@
 
         function renderListView(dataType, title) {
             const data = DB[dataType] || [];
+            
+            if (data.length === 0) {
+                 root.innerHTML = `
+                    <div class="h-full flex flex-col items-center justify-center bg-white p-10 text-center">
+                         <i class="fa-solid fa-triangle-exclamation text-4xl text-amber-500 mb-4"></i>
+                         <h3 class="text-xl font-bold text-slate-800 mb-2">Data Kosong</h3>
+                         <p class="text-sm text-slate-500 mb-6">Tab <strong>${dataType}</strong> tidak ditemukan atau kosong.</p>
+                         <button onclick="navigateTo('home')" class="px-6 py-2 bg-emerald-600 text-white rounded-full font-medium">Kembali</button>
+                    </div>`;
+                return;
+            }
+
             const html = `
                 <div class="h-full flex flex-col bg-slate-50 animate-fade-in rounded-t-xl">
                     <div class="flex items-center gap-4 p-4 bg-white shadow-sm sticky top-0 z-30 h-16">
@@ -429,34 +452,22 @@
             root.innerHTML = html;
         }
 
-        // ==========================================
-        // 4. SLIDER ENGINE
-        // ==========================================
-        
         function updateSlidePosition() {
             const track = document.getElementById('slides-track');
             if(!track) return;
 
-            const isRTL = AppState.isRTL;
             const index = AppState.currentIndex;
             const length = AppState.data.length;
 
-            let translateX = 0;
+            // Simplified: Always translate standard X
             const step = 100 / length; 
-
-            if (isRTL) {
-                translateX = index * step; 
-            } else {
-                translateX = -(index * step);
-            }
+            const translateX = -(index * step);
 
             track.style.transform = `translateX(${translateX}%)`;
 
-            // Indicators
             const indicator = document.getElementById('slide-indicator');
             if(indicator) indicator.innerText = `${index + 1}/${length}`;
 
-            // Dots
             AppState.data.forEach((_, i) => {
                 const dot = document.getElementById(`dot-${i}`);
                 if(dot) {
@@ -467,9 +478,7 @@
         }
 
         window.handleNavClick = function(direction) {
-            let indexChange = direction;
-            if (AppState.isRTL) indexChange = -direction; 
-            let nextIndex = AppState.currentIndex + indexChange;
+            let nextIndex = AppState.currentIndex + direction;
             
             if (nextIndex >= 0 && nextIndex < AppState.data.length) {
                 AppState.currentIndex = nextIndex;
@@ -496,20 +505,16 @@
                 const threshold = 50;
                 
                 if (Math.abs(diff) > threshold) {
-                    // Logic Logic Swap for RTL
                     const isSwipeLeft = diff > 0;
                     if (isSwipeLeft) {
-                        handleNavClick(AppState.isRTL ? 1 : 1); // Next visual
+                        handleNavClick(1); // Next
                     } else {
-                        handleNavClick(AppState.isRTL ? -1 : -1); // Prev visual
+                        handleNavClick(-1); // Prev
                     }
                 }
             });
         }
 
-        // ==========================================
-        // 5. BOOTSTRAP
-        // ==========================================
         document.addEventListener('DOMContentLoaded', () => {
             fetchData();
             renderHome();

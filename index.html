@@ -368,7 +368,7 @@
         function renderHome() {
             const h = new Date().getHours();
             const greet = h>=10&&h<15?"Selamat Siang":h>=15&&h<18?"Selamat Sore":h>=18?"Selamat Malam":"Selamat Pagi";
-            const quote = ["Basahi lisanmu dengan Dzikir.", "Shalat adalah tiang agama.", "Ingatlah Allah, hati akan tenang."][Math.floor(Math.random()*3)];
+            const quote = ["Ingatlah, hanya dengan mengingat Allah hati menjadi tenteram. (QS. Ar-Ra‘d: 28)", "Dan sungguh, mengingat Allah itu lebih besar (keutamaannya). (QS. Al-‘Ankabut: 45)", "Perumpamaan orang yang berzikir kepada Rabb-nya dan yang tidak berzikir adalah seperti orang hidup dan orang mati. (HR. Bukhari)"][Math.floor(Math.random()*3)];
             
             root.innerHTML = `
                 <div class="h-full flex flex-col islamic-pattern relative animate-fade-in bg-white">

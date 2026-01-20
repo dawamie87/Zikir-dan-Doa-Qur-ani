@@ -60,10 +60,10 @@
             }
         }
 
-        /* Specialized Arabic Styling */
+        /* Specialized Arabic Styling (Mirip Referensi) */
         .font-arabic {
             font-family: var(--font-arabic);
-            line-height: 2.6; /* Sedikit dilonggarkan */
+            line-height: 3.0; /* Diperbesar agar harakat tidak bertumpuk */
             font-feature-settings: "kern" 1, "liga" 1;
         }
 
@@ -377,7 +377,7 @@
                                  Desktop (inside 480px app): capped at text-5xl (48px) to prevent messy overflow
                             -->
                             <div class="w-full mb-8 text-center" dir="rtl">
-                                <p class="font-arabic text-4xl md:text-[2.75rem] text-slate-800 leading-[2.6] tracking-wide drop-shadow-sm select-text">
+                                <p class="font-arabic text-4xl md:text-[2.75rem] text-black leading-[2.8] tracking-wide drop-shadow-sm select-text">
                                     ${item.arabic}
                                 </p>
                             </div>
@@ -411,7 +411,7 @@
                                 <p class="text-slate-600 text-[15px] leading-relaxed mb-4">${item.content}</p>
                                 <div class="bg-emerald-50/50 p-4 rounded-xl border border-emerald-100 flex flex-col items-center gap-2">
                                     <span class="text-[10px] text-emerald-600 font-bold uppercase tracking-wider bg-white px-2 py-0.5 rounded shadow-sm">Contoh</span>
-                                    <span class="font-arabic text-3xl text-slate-800 mt-1">${item.example}</span>
+                                    <span class="font-arabic text-3xl text-black mt-1">${item.example}</span>
                                 </div>
                             </div>
                         `).join('')}

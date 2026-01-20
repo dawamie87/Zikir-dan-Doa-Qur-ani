@@ -68,8 +68,15 @@
         .font-arabic {
             font-family: var(--font-arabic);
             line-height: 2.0; 
-            /* PERBAIKAN RENDERING ARAB: Mengaktifkan fitur ligature & contextual alternates */
-            font-feature-settings: "kern" 1, "liga" 1, "calt" 1, "dlig" 1;
+            /* PERBAIKAN RENDERING ARAB LENGKAP: 
+               - kern: Jarak antar huruf
+               - liga: Ligature standar
+               - calt: Alternatif kontekstual
+               - dlig: Ligature dekoratif (seperti Allah, Muhammad)
+               - mkmk: Mark to Mark (Harakat bertumpuk agar tidak tabrakan)
+               - ccmp: Komposisi karakter (Memperbaiki kasus Lam-Alif Maddah)
+            */
+            font-feature-settings: "kern" 1, "liga" 1, "calt" 1, "dlig" 1, "mkmk" 1, "ccmp" 1;
             font-variant-ligatures: common-ligatures contextual;
             text-rendering: optimizeLegibility;
             font-weight: normal !important;
@@ -499,7 +506,8 @@
 
             return `
                 <div class="h-full flex-shrink-0 overflow-y-auto hide-scrollbar flex flex-col items-center relative" style="width: ${width}%">
-                    <div class="w-full min-h-full flex flex-col items-center py-4 px-4 md:px-8">
+                    <!-- ADDED PADDING TOP/BOTTOM TO PREVENT CLIPPING -->
+                    <div class="w-full min-h-full flex flex-col items-center py-6 px-4 md:px-8">
                         <div class="my-auto w-full flex flex-col items-center max-w-md">
                             ${count}
                             ${source}

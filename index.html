@@ -67,8 +67,11 @@
 
         .font-arabic {
             font-family: var(--font-arabic);
-            line-height: 2.0; /* Rapat & Padat */
-            font-feature-settings: "kern" 1, "liga" 1;
+            line-height: 2.0; 
+            /* PERBAIKAN RENDERING ARAB: Mengaktifkan fitur ligature & contextual alternates */
+            font-feature-settings: "kern" 1, "liga" 1, "calt" 1, "dlig" 1;
+            font-variant-ligatures: common-ligatures contextual;
+            text-rendering: optimizeLegibility;
             font-weight: normal !important;
         }
 

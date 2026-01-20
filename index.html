@@ -66,7 +66,7 @@
 
         .font-arabic {
             font-family: var(--font-arabic);
-            line-height: 2.0; /* LEBIH RAPAT (Kompak) */
+            line-height: 2.0; /* Rapat & Padat */
             font-feature-settings: "kern" 1, "liga" 1;
             font-weight: normal !important;
         }
@@ -88,7 +88,6 @@
 </head>
 <body>
 
-    <!-- PERBAIKAN MOBILE: Gunakan h-[100dvh] agar pas di layar HP dengan address bar -->
     <main id="app-root" class="w-full h-[100dvh] bg-white shadow-2xl overflow-hidden relative
         md:h-[85vh] md:w-[480px] md:max-w-lg md:rounded-[2.5rem] md:border-8 md:border-white md:ring-1 md:ring-gray-200">
     </main>
@@ -147,14 +146,17 @@
         // ==========================================
         
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw8J1hsT-Nb9eBOwDWkPG9Iff6d6Vb9lThA0RjIioCorPRpD3A5oYQ8fIjgXcjQ8J8fAw/exec"; 
+        const CACHE_KEY = "dzikir_app_data_v1"; // Kunci untuk penyimpanan lokal
 
         let DB = {
             dzikirPagi: [], dzikirPetang: [], doaHarian: [], 
             dzikirShalat: [], doaQurani: [], belajarTajwid: []
         };
 
+        // --- SMART MAPPING & STRICT CLEANING ---
         function smartNormalize(data) {
             const normalized = {};
+            
             const keyMap = {
                 'judul': 'title', 'nama': 'title', 'name': 'title',
                 'arab': 'arabic', 'arof': 'arabic', 'teks': 'arabic',
@@ -200,7 +202,7 @@
                 if(isError) {
                     toast.classList.replace('bg-slate-800', 'bg-red-600');
                     icon.className = "fa-solid fa-triangle-exclamation";
-                } else if (msg.includes("Berhasil")) {
+                } else if (msg.includes("Berhasil") || msg.includes("Siap") || msg.includes("Diperbarui")) {
                     toast.classList.replace('bg-slate-800', 'bg-emerald-600');
                     icon.className = "fa-solid fa-check";
                     setTimeout(() => toast.classList.add('opacity-0'), 3000);
@@ -210,44 +212,104 @@
             }
         }
 
+        // --- LOAD DATA STRATEGY (Cache First) ---
         async function fetchData() {
+            // 1. Cek Cache Lokal Dulu (Instant Load)
+            const cachedData = localStorage.getItem(CACHE_KEY);
+            let hasCache = false;
+
+            if (cachedData) {
+                try {
+                    const parsed = JSON.parse(cachedData);
+                    if (parsed && Object.keys(parsed).length > 0) {
+                        DB = parsed;
+                        console.log("Data dimuat dari Cache (Cepat)");
+                        hasCache = true;
+                        // Render ulang jika pengguna sudah ada di halaman selain home
+                        if (AppState.currentView !== 'home') {
+                            render(AppState.currentView, { 
+                                type: AppState.currentView === 'slider' ? 'dzikirPagi' : 'belajarTajwid',
+                                title: 'Memuat...', // Judul sementara
+                                rtl: true 
+                            });
+                        }
+                    }
+                } catch (e) {
+                    console.error("Cache rusak, mengabaikan...");
+                }
+            }
+
+            // Jika tidak ada cache, tampilkan loading
+            if (!hasCache) {
+                showToast("Menghubungkan Database...");
+            } else {
+                // Jika ada cache, beri tahu user kita sedang cek update diam-diam
+                console.log("Mengecek pembaruan data di latar belakang...");
+            }
+
+            // 2. Fetch Data Terbaru dari Server (Background Sync)
             if(!SCRIPT_URL) return;
-            showToast("Menghubungkan Database...");
+
             try {
                 const response = await fetch(SCRIPT_URL + "?t=" + new Date().getTime());
-                if (!response.ok) throw new Error("Gagal terhubung ke Google");
+                if (!response.ok) throw new Error("Gagal koneksi server");
+                
                 const json = await response.json();
+                
                 if (json && Object.keys(json).length > 0) {
-                    DB = smartNormalize(json); 
-                    const totalRealItems = Object.values(DB).reduce((acc, arr) => acc + arr.length, 0);
-                    console.log("Data bersih:", DB);
-                    if (totalRealItems > 0) showToast("Data Berhasil Diperbarui!");
-                    else showToast("Data Kosong (Cek Spreadsheet)", true);
+                    const newData = smartNormalize(json);
                     
+                    // Simpan ke Cache & Update DB
+                    DB = newData;
+                    localStorage.setItem(CACHE_KEY, JSON.stringify(newData));
+                    
+                    console.log("Data terbaru berhasil diambil & disimpan");
+
+                    const totalRealItems = Object.values(DB).reduce((acc, arr) => acc + arr.length, 0);
+                    
+                    if (totalRealItems > 0) {
+                        if (hasCache) {
+                            showToast("Data Telah Diperbarui"); // Info update halus
+                        } else {
+                            showToast("Data Siap!"); 
+                        }
+                    } 
+                    
+                    // Refresh view jika user sedang melihat konten
+                    // (Opsional: hanya jika data berubah signifikan, tapi refresh aman dilakukan)
                     if (AppState.currentView !== 'home') {
-                       render(AppState.currentView, { 
-                           type: AppState.currentView === 'slider' ? 'dzikirPagi' : 'belajarTajwid',
-                           title: 'Dzikir Pagi',
-                           rtl: true 
-                       });
+                        // Kita trigger render ulang untuk memastikan data terbaru tampil
+                        // Tanpa mengubah posisi index jika memungkinkan (disini reset index demi keamanan)
+                        const currentParams = AppState.currentParams || { type: 'dzikirPagi', title: 'Dzikir', rtl: true };
+                        render(AppState.currentView, currentParams);
                     }
-                } else throw new Error("Format data tidak sesuai");
+                }
             } catch (error) {
-                console.error("Fetch Error:", error);
-                showToast("Gagal mengambil data. Cek Izin Deploy.", true);
+                console.error("Fetch Error (Background):", error);
+                if (!hasCache) {
+                    showToast("Gagal Terhubung. Cek Koneksi.", true);
+                } else {
+                    // Jika ada cache, biarkan user pakai cache tanpa error mengganggu
+                    console.log("Menggunakan data cache karena offline/gagal fetch");
+                }
             }
         }
 
+        // ==========================================
+        // 2. STATE & ROUTER
+        // ==========================================
         const AppState = {
             currentView: 'home',
             data: null,
             currentIndex: 0,
-            isRTL: false
+            isRTL: false,
+            currentParams: null // Simpan params terakhir untuk refresh
         };
 
         const root = document.getElementById('app-root');
 
         function navigateTo(viewName, params = null) {
+            AppState.currentParams = params; // Simpan konteks
             root.style.opacity = '0.7';
             setTimeout(() => {
                 AppState.currentView = viewName;
@@ -267,6 +329,10 @@
                 default: renderHome();
             }
         }
+
+        // ==========================================
+        // 3. UI RENDERERS
+        // ==========================================
 
         function renderHome() {
             const hour = new Date().getHours();
@@ -303,7 +369,10 @@
                             ${MenuCard("Dzikir Pagi", "fa-sun", "slider", {type: 'dzikirPagi', title: 'Dzikir Pagi', rtl: true})}
                             ${MenuCard("Dzikir Petang", "fa-cloud-moon", "slider", {type: 'dzikirPetang', title: 'Dzikir Petang', rtl: true})}
                             ${MenuCard("Doa Qurani", "fa-quran", "slider", {type: 'doaQurani', title: 'Doa-Doa Qurani', rtl: true})}
-                            ${MenuCard("Doa Harian", "fa-hands-praying", "slider", {type: 'doaHarian', title: 'Doa Harian', rtl: false})}
+                            
+                            <!-- PERBAIKAN: Doa Harian sekarang RTL (rtl: true) -->
+                            ${MenuCard("Doa Harian", "fa-hands-praying", "slider", {type: 'doaHarian', title: 'Doa Harian', rtl: true})}
+                            
                             ${MenuCard("Dzikir Shalat", "fa-mosque", "slider", {type: 'dzikirShalat', title: 'Dzikir Setelah Shalat', rtl: true})} 
                             ${MenuCard("Belajar Tajwid", "fa-book-open", "list", {type: 'belajarTajwid', title: 'Belajar Tajwid'})}
                         </div>
@@ -424,7 +493,6 @@
                             ${source}
                             <h3 class="text-emerald-700 font-bold text-lg mb-4 text-center leading-tight">${title}</h3>
                             <div class="w-full mb-6 text-center" dir="rtl">
-                                <!-- PERBAIKAN: Font Mobile di-set ke 2rem agar lebih pas di layar HP -->
                                 <p class="font-arabic text-[2rem] md:text-[3rem] text-black leading-[2.0] tracking-wide drop-shadow-sm select-text">
                                     ${arabic}
                                 </p>

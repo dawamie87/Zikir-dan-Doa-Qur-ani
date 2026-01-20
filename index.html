@@ -112,8 +112,8 @@
         // 1. DATABASE & CONFIG
         // ==========================================
         
-        // Ganti dengan URL Google Apps Script Anda jika sudah di-deploy
-        const SCRIPT_URL = ""; 
+        // URL Google Apps Script yang sudah Anda berikan
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw8J1hsT-Nb9eBOwDWkPG9Iff6d6Vb9lThA0RjIioCorPRpD3A5oYQ8fIjgXcjQ8J8fAw/exec"; 
 
         // Data Default (Offline/Fallback)
         let DB = {
@@ -172,9 +172,15 @@
         async function fetchData() {
             if(!SCRIPT_URL) return;
             try {
-                const response = await fetch(SCRIPT_URL);
+                // Gunakan cache buster agar data selalu fresh saat reload
+                const response = await fetch(SCRIPT_URL + "?t=" + new Date().getTime());
                 const json = await response.json();
-                DB = json;
+                
+                if (json && Object.keys(json).length > 0) {
+                    DB = json;
+                    console.log("Data berhasil dimuat dari Spreadsheet");
+                }
+                
                 if (AppState.currentView !== 'home') {
                     // Refresh view if user is already looking at something
                    render(AppState.currentView, { 
@@ -184,7 +190,7 @@
                    });
                 }
             } catch (error) {
-                console.log("Mode Offline / Demo Data Active");
+                console.log("Mode Offline / Demo Data Active", error);
             }
         }
 

@@ -35,6 +35,7 @@
 
         :root {
             --font-ui: 'Inter', system-ui, -apple-system, sans-serif;
+            /* Prioritaskan LPMQ Isep Misbah */
             --font-arabic: 'LPMQ Isep Misbah', 'Scheherazade New', 'Amiri', serif;
             --primary: #047857; 
             --bg-light: #f8fafc;
@@ -59,11 +60,12 @@
             }
         }
 
-        /* Specialized Arabic Styling (Mirip Referensi) */
+        /* Specialized Arabic Styling (LPMQ Optimized) */
         .font-arabic {
             font-family: var(--font-arabic);
-            line-height: 3.0; /* Diperbesar agar harakat tidak bertumpuk */
+            line-height: 3.2; /* Ditingkatkan agar harakat tidak bertumpuk */
             font-feature-settings: "kern" 1, "liga" 1;
+            font-weight: normal !important; /* LPMQ tidak cocok di-bold paksa */
         }
 
         /* Utility: Hide Scrollbar but keep functionality */
@@ -372,11 +374,12 @@
                             <h3 class="text-emerald-700 font-bold text-lg mb-6 text-center leading-tight">${item.title}</h3>
                             
                             <!-- ARABIC TEXT: Fixed Desktop Overflow.
-                                 Mobile: text-4xl
-                                 Desktop (inside 480px app): capped at text-5xl (48px) to prevent messy overflow
+                                 Mobile: text-[2.5rem] (approx 40px)
+                                 Desktop: text-[3.2rem] (approx 51px) for prominence
+                                 Line-height: leading-[3.2] for LPMQ spacing
                             -->
                             <div class="w-full mb-8 text-center" dir="rtl">
-                                <p class="font-arabic text-4xl md:text-[2.75rem] text-black leading-[2.8] tracking-wide drop-shadow-sm select-text">
+                                <p class="font-arabic text-[2.5rem] md:text-[3.2rem] text-black leading-[3.2] tracking-wide drop-shadow-sm select-text">
                                     ${item.arabic}
                                 </p>
                             </div>
@@ -410,7 +413,7 @@
                                 <p class="text-slate-600 text-[15px] leading-relaxed mb-4">${item.content}</p>
                                 <div class="bg-emerald-50/50 p-4 rounded-xl border border-emerald-100 flex flex-col items-center gap-2">
                                     <span class="text-[10px] text-emerald-600 font-bold uppercase tracking-wider bg-white px-2 py-0.5 rounded shadow-sm">Contoh</span>
-                                    <span class="font-arabic text-3xl text-black mt-1">${item.example}</span>
+                                    <span class="font-arabic text-4xl text-black mt-1 leading-[2.5]">${item.example}</span>
                                 </div>
                             </div>
                         `).join('')}

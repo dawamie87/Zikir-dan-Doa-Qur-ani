@@ -88,7 +88,8 @@
 </head>
 <body>
 
-    <main id="app-root" class="w-full h-screen bg-white shadow-2xl overflow-hidden relative
+    <!-- PERBAIKAN MOBILE: Gunakan h-[100dvh] agar pas di layar HP dengan address bar -->
+    <main id="app-root" class="w-full h-[100dvh] bg-white shadow-2xl overflow-hidden relative
         md:h-[85vh] md:w-[480px] md:max-w-lg md:rounded-[2.5rem] md:border-8 md:border-white md:ring-1 md:ring-gray-200">
     </main>
 
@@ -423,7 +424,8 @@
                             ${source}
                             <h3 class="text-emerald-700 font-bold text-lg mb-4 text-center leading-tight">${title}</h3>
                             <div class="w-full mb-6 text-center" dir="rtl">
-                                <p class="font-arabic text-[2.2rem] md:text-[3rem] text-black leading-[2.0] tracking-wide drop-shadow-sm select-text">
+                                <!-- PERBAIKAN: Font Mobile di-set ke 2rem agar lebih pas di layar HP -->
+                                <p class="font-arabic text-[2rem] md:text-[3rem] text-black leading-[2.0] tracking-wide drop-shadow-sm select-text">
                                     ${arabic}
                                 </p>
                             </div>

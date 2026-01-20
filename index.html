@@ -428,10 +428,10 @@
             setTimeout(fetchPrayerTimes, 100);
         }
 
-        // UPDATED MENU CARD - Bigger Fonts & Icons
+        // UPDATED MENU CARD - Slightly smaller
         function MenuCard(t, i, v, p) {
-            return `<button onclick="navigateTo('${v}', ${JSON.stringify(p).replace(/"/g, "&quot;")})" class="group relative bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center gap-3 transition-all duration-300 hover:shadow-lg hover:border-emerald-300 hover:-translate-y-1 h-36 w-full">
-                <div class="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-2xl group-hover:bg-emerald-600 group-hover:text-white transition-colors duration-300 shadow-sm ring-1 ring-emerald-100">
+            return `<button onclick="navigateTo('${v}', ${JSON.stringify(p).replace(/"/g, "&quot;")})" class="group relative bg-white p-3 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center gap-2 transition-all duration-300 hover:shadow-lg hover:border-emerald-300 hover:-translate-y-1 h-32 w-full">
+                <div class="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl group-hover:bg-emerald-600 group-hover:text-white transition-colors duration-300 shadow-sm ring-1 ring-emerald-100">
                     <i class="fa-solid ${i}"></i>
                 </div>
                 <span class="text-sm font-bold text-slate-700 leading-tight text-center px-1">${t}</span>

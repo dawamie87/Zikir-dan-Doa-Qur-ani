@@ -66,7 +66,7 @@
 
         .font-arabic {
             font-family: var(--font-arabic);
-            line-height: 2.2; 
+            line-height: 2.0; /* LEBIH RAPAT (Kompak) */
             font-feature-settings: "kern" 1, "liga" 1;
             font-weight: normal !important;
         }
@@ -103,7 +103,6 @@
         // 0. PWA INSTALLATION LOGIC
         // ==========================================
         
-        // 1. Setup Manifest secara Dinamis (Data URI)
         const manifestData = {
             "name": "Dzikir & Doa Qurani",
             "short_name": "DzikirApp",
@@ -113,7 +112,7 @@
             "theme_color": "#047857",
             "description": "Aplikasi Dzikir Harian Premium",
             "icons": [{
-                "src": "https://cdn-icons-png.flaticon.com/512/4358/4358666.png", // Icon Masjid Hijau
+                "src": "https://cdn-icons-png.flaticon.com/512/4358/4358666.png",
                 "sizes": "512x512",
                 "type": "image/png"
             }]
@@ -123,17 +122,10 @@
         const manifestURL = URL.createObjectURL(blobManifest);
         document.getElementById('my-manifest').setAttribute('href', manifestURL);
 
-        // 2. Service Worker Note
-        // CATATAN: Pendaftaran Service Worker via Blob URL tidak didukung di banyak browser modern (menyebabkan TypeError).
-        // Untuk Production, buat file 'sw.js' kosong di folder root dan uncomment baris di bawah:
-        // if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js'); }
-
-        // 3. Handle Install Prompt
         let deferredPrompt;
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            // Tampilkan tombol install jika event fired
             const installBtn = document.getElementById('btn-install-app');
             if(installBtn) installBtn.classList.remove('hidden');
         });
@@ -142,11 +134,9 @@
             if (deferredPrompt) {
                 deferredPrompt.prompt();
                 const { outcome } = await deferredPrompt.userChoice;
-                console.log(`User response to the install prompt: ${outcome}`);
                 deferredPrompt = null;
                 document.getElementById('btn-install-app').classList.add('hidden');
             } else {
-                // Fallback jika browser tidak mendukung beforeinstallprompt atau sudah terinstall
                 alert("Untuk menginstall aplikasi:\n1. Klik menu browser (titik tiga)\n2. Pilih 'Tambahkan ke Layar Utama' atau 'Install App'");
             }
         }
@@ -155,7 +145,6 @@
         // 1. DATABASE & CONFIG
         // ==========================================
         
-        // URL Backend Apps Script
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw8J1hsT-Nb9eBOwDWkPG9Iff6d6Vb9lThA0RjIioCorPRpD3A5oYQ8fIjgXcjQ8J8fAw/exec"; 
 
         let DB = {
@@ -163,10 +152,8 @@
             dzikirShalat: [], doaQurani: [], belajarTajwid: []
         };
 
-        // --- SMART MAPPING & STRICT CLEANING ---
         function smartNormalize(data) {
             const normalized = {};
-            
             const keyMap = {
                 'judul': 'title', 'nama': 'title', 'name': 'title',
                 'arab': 'arabic', 'arof': 'arabic', 'teks': 'arabic',
@@ -194,7 +181,6 @@
                     const arab = item.arabic ? item.arabic.toString().trim() : "";
                     const title = item.title ? item.title.toString().trim() : "";
                     const content = item.content ? item.content.toString().trim() : "";
-                    
                     return (arab.length > 3) || (title.length > 2) || (content.length > 3);
                 });
             });
@@ -225,28 +211,17 @@
 
         async function fetchData() {
             if(!SCRIPT_URL) return;
-            
             showToast("Menghubungkan Database...");
-
             try {
                 const response = await fetch(SCRIPT_URL + "?t=" + new Date().getTime());
-                
                 if (!response.ok) throw new Error("Gagal terhubung ke Google");
-                
                 const json = await response.json();
-                
                 if (json && Object.keys(json).length > 0) {
                     DB = smartNormalize(json); 
-                    
                     const totalRealItems = Object.values(DB).reduce((acc, arr) => acc + arr.length, 0);
-                    
                     console.log("Data bersih:", DB);
-
-                    if (totalRealItems > 0) {
-                        showToast("Data Berhasil Diperbarui!");
-                    } else {
-                         showToast("Data Kosong (Cek Spreadsheet)", true);
-                    }
+                    if (totalRealItems > 0) showToast("Data Berhasil Diperbarui!");
+                    else showToast("Data Kosong (Cek Spreadsheet)", true);
                     
                     if (AppState.currentView !== 'home') {
                        render(AppState.currentView, { 
@@ -255,18 +230,13 @@
                            rtl: true 
                        });
                     }
-                } else {
-                    throw new Error("Format data tidak sesuai");
-                }
+                } else throw new Error("Format data tidak sesuai");
             } catch (error) {
                 console.error("Fetch Error:", error);
                 showToast("Gagal mengambil data. Cek Izin Deploy.", true);
             }
         }
 
-        // ==========================================
-        // 2. STATE & ROUTER
-        // ==========================================
         const AppState = {
             currentView: 'home',
             data: null,
@@ -297,10 +267,6 @@
             }
         }
 
-        // ==========================================
-        // 3. UI RENDERERS
-        // ==========================================
-
         function renderHome() {
             const hour = new Date().getHours();
             let greeting = "Assalamualaikum";
@@ -317,10 +283,8 @@
             
             const html = `
                 <div class="h-full flex flex-col islamic-pattern relative animate-fade-in bg-white">
-                    <!-- HEADER with INSTALL BUTTON -->
                     <div class="pt-8 px-6 flex justify-between items-center z-10">
-                        <div></div> <!-- Spacer -->
-                        <!-- Install Button (Hidden by default, shown by JS) -->
+                        <div></div> 
                         <button id="btn-install-app" onclick="installPWA()" class="hidden bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-full text-xs font-bold shadow-sm hover:bg-emerald-200 transition-colors flex items-center gap-2">
                             <i class="fa-solid fa-download"></i> Install App
                         </button>
@@ -350,8 +314,6 @@
                 </div>
             `;
             root.innerHTML = html;
-            
-            // Re-check deferredPrompt in case event fired before render
             if(window.deferredPrompt) {
                  const btn = document.getElementById('btn-install-app');
                  if(btn) btn.classList.remove('hidden');
@@ -382,7 +344,7 @@
                     <div class="h-full flex flex-col items-center justify-center bg-white p-10 text-center">
                          <i class="fa-solid fa-triangle-exclamation text-4xl text-amber-500 mb-4"></i>
                          <h3 class="text-xl font-bold text-slate-800 mb-2">Data Kosong</h3>
-                         <p class="text-sm text-slate-500 mb-6">Pastikan Sheet <strong>${dataType}</strong> terisi data dengan benar dan tidak ada baris kosong di awal.</p>
+                         <p class="text-sm text-slate-500 mb-6">Pastikan Sheet <strong>${dataType}</strong> terisi data dengan benar.</p>
                          <button onclick="navigateTo('home')" class="px-6 py-2 bg-emerald-600 text-white rounded-full font-medium">Kembali</button>
                     </div>`;
                 return;
@@ -410,7 +372,8 @@
                         </div>
                     </div>
 
-                    <div class="p-5 pb-8 border-t border-gray-100 bg-white z-30 flex justify-between items-center shadow-[0_-4px_20px_rgba(0,0,0,0.03)] h-24">
+                    <!-- CONTROLS COMPACTED -->
+                    <div class="px-5 py-2 border-t border-gray-100 bg-white z-30 flex justify-between items-center shadow-[0_-4px_20px_rgba(0,0,0,0.03)] h-20">
                         <button onclick="handleNavClick(-1)" class="w-12 h-12 rounded-full bg-slate-50 text-slate-600 hover:bg-slate-200 flex items-center justify-center text-lg active:scale-95 transition-all">
                             <i class="fa-solid fa-chevron-left"></i>
                         </button>
@@ -427,12 +390,8 @@
             `;
             root.innerHTML = html;
             initSwipeLogic();
-            
-            if (isRTL) {
-                updateSlidePosition();
-            } else {
-                window.addEventListener('resize', updateSlidePosition);
-            }
+            if (isRTL) updateSlidePosition();
+            else window.addEventListener('resize', updateSlidePosition);
         }
 
         function SliderCard(item, totalItems) {
@@ -443,13 +402,13 @@
             const latin = item.latin ? `<p class="text-[15px] text-emerald-700 font-medium italic mb-4 leading-relaxed opacity-90">${item.latin}</p>` : '';
             const translation = item.translation || "";
             const faedah = item.faedah ? 
-                `<div class="mt-6 mx-4 p-4 bg-amber-50 rounded-xl text-sm text-amber-900 border border-amber-100 leading-relaxed shadow-sm">
+                `<div class="mt-4 mx-4 p-4 bg-amber-50 rounded-xl text-sm text-amber-900 border border-amber-100 leading-relaxed shadow-sm">
                     <strong class="block text-amber-700 mb-1 text-xs uppercase tracking-wide"><i class="fa-solid fa-star mr-1"></i> REFERENSI AYAT / HADITS</strong>
                     ${item.faedah}
                 </div>` : "";
             
             const count = item.count ? 
-                `<div class="inline-flex items-center justify-center bg-emerald-100 text-emerald-700 font-bold text-xs px-3 py-1.5 rounded-full mb-6 shadow-sm">
+                `<div class="inline-flex items-center justify-center bg-emerald-100 text-emerald-700 font-bold text-xs px-3 py-1.5 rounded-full mb-4 shadow-sm">
                     <i class="fa-solid fa-rotate mr-2 text-[10px]"></i> Baca ${item.count}x
                 </div>` : "";
             
@@ -458,17 +417,17 @@
 
             return `
                 <div class="h-full flex-shrink-0 overflow-y-auto hide-scrollbar flex flex-col items-center relative" style="width: ${width}%">
-                    <div class="w-full h-full flex flex-col items-center py-8 px-4 md:px-8">
+                    <div class="w-full min-h-full flex flex-col items-center py-4 px-4 md:px-8">
                         <div class="my-auto w-full flex flex-col items-center max-w-md">
                             ${count}
                             ${source}
-                            <h3 class="text-emerald-700 font-bold text-lg mb-6 text-center leading-tight">${title}</h3>
-                            <div class="w-full mb-8 text-center" dir="rtl">
-                                <p class="font-arabic text-[2.5rem] md:text-[3.2rem] text-black leading-[2.2] tracking-wide drop-shadow-sm select-text">
+                            <h3 class="text-emerald-700 font-bold text-lg mb-4 text-center leading-tight">${title}</h3>
+                            <div class="w-full mb-6 text-center" dir="rtl">
+                                <p class="font-arabic text-[2.2rem] md:text-[3rem] text-black leading-[2.0] tracking-wide drop-shadow-sm select-text">
                                     ${arabic}
                                 </p>
                             </div>
-                            <div class="w-full text-center pb-8">
+                            <div class="w-full text-center pb-4">
                                 ${latin}
                                 <p class="text-[15px] md:text-base text-slate-600 leading-7 font-light">${translation}</p>
                                 ${faedah}
@@ -551,7 +510,6 @@
 
         window.handleNavClick = function(direction) {
             let nextIndex = AppState.currentIndex + direction;
-            
             if (nextIndex >= 0 && nextIndex < AppState.data.length) {
                 AppState.currentIndex = nextIndex;
                 updateSlidePosition();
@@ -578,19 +536,12 @@
                 
                 if (Math.abs(diff) > threshold) {
                     const isSwipeLeft = diff > 0; 
-                    
                     if (AppState.isRTL) {
-                        if (!isSwipeLeft) { 
-                            handleNavClick(1); 
-                        } else {
-                            handleNavClick(-1); 
-                        }
+                        if (!isSwipeLeft) handleNavClick(1); 
+                        else handleNavClick(-1); 
                     } else {
-                        if (isSwipeLeft) {
-                            handleNavClick(1); 
-                        } else {
-                            handleNavClick(-1);
-                        }
+                        if (isSwipeLeft) handleNavClick(1); 
+                        else handleNavClick(-1);
                     }
                 }
             });

@@ -61,7 +61,7 @@
         /* Specialized Arabic Styling */
         .font-arabic {
             font-family: var(--font-arabic);
-            line-height: 2.5; 
+            line-height: 2.6; /* Sedikit dilonggarkan */
             font-feature-settings: "kern" 1, "liga" 1;
         }
 
@@ -370,9 +370,12 @@
                             ${source}
                             <h3 class="text-emerald-700 font-bold text-lg mb-6 text-center leading-tight">${item.title}</h3>
                             
-                            <!-- ARABIC TEXT: Responsive Sizing (text-4xl mobile -> text-5xl/6xl desktop) -->
+                            <!-- ARABIC TEXT: Fixed Desktop Overflow.
+                                 Mobile: text-4xl
+                                 Desktop (inside 480px app): capped at text-5xl (48px) to prevent messy overflow
+                            -->
                             <div class="w-full mb-8 text-center" dir="rtl">
-                                <p class="font-arabic text-4xl md:text-5xl lg:text-[3.5rem] text-slate-800 leading-[2.4] tracking-wide drop-shadow-sm select-text">
+                                <p class="font-arabic text-4xl md:text-[2.75rem] text-slate-800 leading-[2.6] tracking-wide drop-shadow-sm select-text">
                                     ${item.arabic}
                                 </p>
                             </div>

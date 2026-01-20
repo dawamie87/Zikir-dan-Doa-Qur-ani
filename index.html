@@ -6,9 +6,15 @@
     <meta name="theme-color" content="#047857">
     <meta name="description" content="Aplikasi Dzikir & Doa Qurani Premium">
     
-    <!-- PWA Settings -->
+    <!-- PWA Settings (IOS Support) -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Dzikir App">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/4358/4358666.png">
+
+    <!-- Dynamic Manifest for PWA -->
+    <link rel="manifest" id="my-manifest">
+
     <title>Dzikir & Doa Qurani</title>
 
     <!-- Tailwind CSS -->
@@ -60,7 +66,7 @@
 
         .font-arabic {
             font-family: var(--font-arabic);
-            line-height: 2.2; /* PERBAIKAN: Jarak baris dirapatkan agar lebih presisi */
+            line-height: 2.2; 
             font-feature-settings: "kern" 1, "liga" 1;
             font-weight: normal !important;
         }
@@ -94,6 +100,58 @@
 
     <script>
         // ==========================================
+        // 0. PWA INSTALLATION LOGIC
+        // ==========================================
+        
+        // 1. Setup Manifest secara Dinamis (Data URI)
+        const manifestData = {
+            "name": "Dzikir & Doa Qurani",
+            "short_name": "DzikirApp",
+            "start_url": ".",
+            "display": "standalone",
+            "background_color": "#ffffff",
+            "theme_color": "#047857",
+            "description": "Aplikasi Dzikir Harian Premium",
+            "icons": [{
+                "src": "https://cdn-icons-png.flaticon.com/512/4358/4358666.png", // Icon Masjid Hijau
+                "sizes": "512x512",
+                "type": "image/png"
+            }]
+        };
+        const stringManifest = JSON.stringify(manifestData);
+        const blobManifest = new Blob([stringManifest], {type: 'application/json'});
+        const manifestURL = URL.createObjectURL(blobManifest);
+        document.getElementById('my-manifest').setAttribute('href', manifestURL);
+
+        // 2. Service Worker Note
+        // CATATAN: Pendaftaran Service Worker via Blob URL tidak didukung di banyak browser modern (menyebabkan TypeError).
+        // Untuk Production, buat file 'sw.js' kosong di folder root dan uncomment baris di bawah:
+        // if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js'); }
+
+        // 3. Handle Install Prompt
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            // Tampilkan tombol install jika event fired
+            const installBtn = document.getElementById('btn-install-app');
+            if(installBtn) installBtn.classList.remove('hidden');
+        });
+
+        async function installPWA() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`User response to the install prompt: ${outcome}`);
+                deferredPrompt = null;
+                document.getElementById('btn-install-app').classList.add('hidden');
+            } else {
+                // Fallback jika browser tidak mendukung beforeinstallprompt atau sudah terinstall
+                alert("Untuk menginstall aplikasi:\n1. Klik menu browser (titik tiga)\n2. Pilih 'Tambahkan ke Layar Utama' atau 'Install App'");
+            }
+        }
+
+        // ==========================================
         // 1. DATABASE & CONFIG
         // ==========================================
         
@@ -122,7 +180,6 @@
             };
 
             Object.keys(data).forEach(sheetName => {
-                // 1. Mapping Key
                 let mappedArray = data[sheetName].map(item => {
                     const newItem = {};
                     Object.keys(item).forEach(rawKey => {
@@ -133,15 +190,12 @@
                     return newItem;
                 });
 
-                // 2. ULTRA STRICT FILTER (Membuang baris kosong)
                 normalized[sheetName] = mappedArray.filter(item => {
                     const arab = item.arabic ? item.arabic.toString().trim() : "";
                     const title = item.title ? item.title.toString().trim() : "";
                     const content = item.content ? item.content.toString().trim() : "";
                     
-                    const isValidRow = (arab.length > 3) || (title.length > 2) || (content.length > 3);
-                    
-                    return isValidRow;
+                    return (arab.length > 3) || (title.length > 2) || (content.length > 3);
                 });
             });
             return normalized;
@@ -182,10 +236,8 @@
                 const json = await response.json();
                 
                 if (json && Object.keys(json).length > 0) {
-                    // Normalisasi dan Filter Data
                     DB = smartNormalize(json); 
                     
-                    // Hitung total data nyata
                     const totalRealItems = Object.values(DB).reduce((acc, arr) => acc + arr.length, 0);
                     
                     console.log("Data bersih:", DB);
@@ -265,7 +317,16 @@
             
             const html = `
                 <div class="h-full flex flex-col islamic-pattern relative animate-fade-in bg-white">
-                    <div class="pt-12 pb-6 px-6 text-center z-10">
+                    <!-- HEADER with INSTALL BUTTON -->
+                    <div class="pt-8 px-6 flex justify-between items-center z-10">
+                        <div></div> <!-- Spacer -->
+                        <!-- Install Button (Hidden by default, shown by JS) -->
+                        <button id="btn-install-app" onclick="installPWA()" class="hidden bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-full text-xs font-bold shadow-sm hover:bg-emerald-200 transition-colors flex items-center gap-2">
+                            <i class="fa-solid fa-download"></i> Install App
+                        </button>
+                    </div>
+
+                    <div class="pt-4 pb-6 px-6 text-center z-10">
                         <p class="text-emerald-600 font-medium text-xs tracking-[0.2em] uppercase mb-2 opacity-90">${greeting}</p>
                         <h1 class="text-3xl md:text-4xl font-bold text-slate-800 mb-3 tracking-tight">${subGreeting}</h1>
                         <div class="h-1 w-12 bg-emerald-200 mx-auto rounded-full mb-3"></div>
@@ -289,6 +350,12 @@
                 </div>
             `;
             root.innerHTML = html;
+            
+            // Re-check deferredPrompt in case event fired before render
+            if(window.deferredPrompt) {
+                 const btn = document.getElementById('btn-install-app');
+                 if(btn) btn.classList.remove('hidden');
+            }
         }
 
         function MenuCard(title, icon, targetView, params) {
@@ -321,7 +388,6 @@
                 return;
             }
 
-            // PERBAIKAN RTL: Gunakan row-reverse agar urutan DOM (Page 2 di kiri Page 1) sesuai
             const flexDir = isRTL ? 'flex-row-reverse' : 'flex-row';
             const trackWidth = data.length * 100;
 
@@ -362,10 +428,7 @@
             root.innerHTML = html;
             initSwipeLogic();
             
-            // Perbaikan Posisi Awal untuk RTL (Agar halaman 1 muncul duluan)
             if (isRTL) {
-                // Dalam row-reverse, item[0] ada di paling kanan. Kita perlu menggeser track ke kiri 
-                // sejauh (N-1) unit agar item[0] terlihat di viewport.
                 updateSlidePosition();
             } else {
                 window.addEventListener('resize', updateSlidePosition);
@@ -467,18 +530,8 @@
             const step = 100 / length; 
 
             if (isRTL) {
-                // LOGIKA RTL:
-                // Kita menggunakan row-reverse: [Item N] ... [Item 1] [Item 0].
-                // Item 0 ada di ujung KANAN track.
-                // Untuk melihat Item 0, kita harus menggeser track ke kiri (negatif) sebesar (N-1) unit.
-                // Untuk melihat Item 1 (di kiri Item 0), kita geser (N-2) unit.
-                // Rumus: -(Length - 1 - Index) * Step
                 translateX = - (length - 1 - index) * step;
             } else {
-                // LOGIKA LTR:
-                // [Item 0] [Item 1] ...
-                // Item 0 ada di ujung KIRI.
-                // Rumus: -(Index) * Step
                 translateX = -(index * step);
             }
 
@@ -497,7 +550,6 @@
         }
 
         window.handleNavClick = function(direction) {
-            // Direction: 1 = Next (Visual Kiri di RTL), -1 = Prev (Visual Kanan di RTL)
             let nextIndex = AppState.currentIndex + direction;
             
             if (nextIndex >= 0 && nextIndex < AppState.data.length) {
@@ -525,19 +577,15 @@
                 const threshold = 50;
                 
                 if (Math.abs(diff) > threshold) {
-                    const isSwipeLeft = diff > 0; // Geser jari ke kiri -> Ingin lihat konten di KANAN
+                    const isSwipeLeft = diff > 0; 
                     
                     if (AppState.isRTL) {
-                        // Di RTL (row-reverse), konten "Next" ada di KIRI.
-                        // Geser jari ke Kanan (Swipe Right, diff < 0) -> Reveal konten kiri -> Next
                         if (!isSwipeLeft) { 
-                            handleNavClick(1); // Next
+                            handleNavClick(1); 
                         } else {
-                            handleNavClick(-1); // Prev
+                            handleNavClick(-1); 
                         }
                     } else {
-                        // Di LTR, konten "Next" ada di KANAN.
-                        // Geser jari ke Kiri (Swipe Left, diff > 0) -> Reveal konten kanan -> Next
                         if (isSwipeLeft) {
                             handleNavClick(1); 
                         } else {

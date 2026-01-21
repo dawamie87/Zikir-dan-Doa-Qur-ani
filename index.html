@@ -159,6 +159,19 @@
         </div>
     </div>
 
+    <!-- LIST/TOC MODAL -->
+    <div id="toc-modal" class="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl z-50 h-[75vh] flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.1)] transform translate-y-full modal-transition md:max-w-lg md:mx-auto md:rounded-2xl md:bottom-4 md:w-[90%]">
+        <div class="flex justify-between items-center p-4 border-b border-gray-100 bg-white rounded-t-2xl shrink-0">
+            <h3 class="text-lg font-bold text-slate-800"><i class="fa-solid fa-list-ul text-emerald-600 mr-2"></i> Daftar Isi</h3>
+            <button onclick="closeAllModals()" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div id="toc-content-area" class="flex-grow overflow-y-auto p-4 bg-slate-50 space-y-2">
+            <!-- List items injected here -->
+        </div>
+    </div>
+
     <!-- SETTINGS MODAL -->
     <div id="settings-modal" class="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl z-50 p-6 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] transform translate-y-full modal-transition md:max-w-lg md:mx-auto md:rounded-2xl md:bottom-4 md:w-[90%]">
         <div class="flex justify-between items-center mb-6">
@@ -745,7 +758,33 @@
         }
 
         // ==========================================
-        // 8. SLIDER VIEW MODIFIED (Switcher)
+        // 8. LIST/TOC LOGIC (New Feature)
+        // ==========================================
+        function openTocModal() {
+            if (!AppState.data || AppState.data.length === 0) return;
+            
+            const listContainer = document.getElementById('toc-content-area');
+            listContainer.innerHTML = AppState.data.map((item, idx) => {
+                const isActive = idx === AppState.currentIndex;
+                return `
+                <button onclick="jumpToSlide(${idx})" class="w-full text-left p-3 rounded-xl border ${isActive ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-white border-gray-100 text-slate-700'} shadow-sm flex items-center gap-3 transition-all active:scale-95">
+                    <span class="text-xs font-bold ${isActive ? 'bg-emerald-200 text-emerald-800' : 'bg-slate-100 text-slate-500'} w-6 h-6 rounded flex items-center justify-center shrink-0">${idx + 1}</span>
+                    <span class="font-medium text-sm truncate">${item.title || 'Tanpa Judul'}</span>
+                    ${isActive ? '<i class="fa-solid fa-circle-check ml-auto text-emerald-600"></i>' : ''}
+                </button>`;
+            }).join('');
+            
+            openModal('toc-modal');
+        }
+
+        function jumpToSlide(index) {
+            AppState.currentIndex = index;
+            updateSlidePosition();
+            closeAllModals();
+        }
+
+        // ==========================================
+        // 9. SLIDER VIEW MODIFIED (Switcher + TOC)
         // ==========================================
         function renderSliderView(dataType, title, isRTL, isCombined = false) {
             let data = (dataType === 'favorites') ? getBookmarks() : (DB[dataType] || []);
@@ -780,7 +819,10 @@
                     <div class="flex items-center justify-between px-4 py-4 border-b border-gray-100 z-30 bg-white/95 backdrop-blur-sm sticky top-0 h-16">
                         <button onclick="navigateTo('home')" class="w-10 h-10 flex items-center justify-center text-slate-500 hover:bg-slate-100 rounded-full transition-colors"><i class="fa-solid fa-arrow-left"></i></button>
                         ${headerContent}
-                        <button onclick="openModal('settings-modal')" class="w-10 h-10 flex items-center justify-center text-emerald-600 hover:bg-emerald-50 rounded-full transition-colors"><i class="fa-solid fa-sliders"></i></button>
+                        <div class="flex gap-1">
+                            <button onclick="openTocModal()" class="w-10 h-10 flex items-center justify-center text-emerald-600 hover:bg-emerald-50 rounded-full transition-colors"><i class="fa-solid fa-list-ul"></i></button>
+                            <button onclick="openModal('settings-modal')" class="w-10 h-10 flex items-center justify-center text-emerald-600 hover:bg-emerald-50 rounded-full transition-colors"><i class="fa-solid fa-sliders"></i></button>
+                        </div>
                     </div>
                     <div class="flex-grow relative overflow-hidden slider-viewport bg-slate-50">
                         <div id="slides-track" class="h-full flex ${flexDir} items-stretch transition-transform duration-300 ease-out will-change-transform" style="width: ${trackWidth}%; touch-action: pan-y;">

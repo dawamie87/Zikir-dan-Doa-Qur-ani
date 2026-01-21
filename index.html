@@ -47,6 +47,11 @@
             background-color: #f1f5f9; 
             -webkit-tap-highlight-color: transparent;
             overscroll-behavior-y: none;
+            /* Prevent text selection */
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
         }
 
         @media (min-width: 768px) {
@@ -122,6 +127,9 @@
 
         /* Tafsir Text Style */
         .tafsir-content p { margin-bottom: 1rem; text-align: justify; }
+        
+        /* Allow selection only in specific areas if needed */
+        .select-text { -webkit-user-select: text; user-select: text; }
     </style>
 </head>
 <body>
@@ -150,7 +158,7 @@
                 <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
-        <div id="tafsir-content-area" class="flex-grow overflow-y-auto p-6 text-slate-700 leading-relaxed text-sm tafsir-content bg-slate-50">
+        <div id="tafsir-content-area" class="flex-grow overflow-y-auto p-6 text-slate-700 leading-relaxed text-sm tafsir-content bg-slate-50 select-text">
             <!-- Content will be injected here -->
             <div class="flex flex-col items-center justify-center h-full text-slate-400 gap-2">
                 <i class="fa-solid fa-circle-notch fa-spin text-2xl text-emerald-500"></i>
@@ -218,6 +226,19 @@
     </div>
 
     <script>
+        // Security: Prevent Right Click and Developer Tools
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+        
+        document.onkeydown = function(e) {
+            if(e.keyCode == 123) { return false; } // F12
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) { return false; } // Ctrl+Shift+I
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) { return false; } // Ctrl+Shift+C
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) { return false; } // Ctrl+Shift+J
+            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) { return false; } // Ctrl+U
+        };
+
         const manifestData = {
             "name": "Dzikir & Doa Qurani",
             "short_name": "DzikirApp",

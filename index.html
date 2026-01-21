@@ -119,6 +119,9 @@
         
         /* Audio Player Styles */
         .btn-audio-playing { background-color: #d1fae5; color: #059669; border-color: #10b981; }
+
+        /* Tafsir Text Style */
+        .tafsir-content p { margin-bottom: 1rem; text-align: justify; }
     </style>
 </head>
 <body>
@@ -135,6 +138,26 @@
 
     <!-- OVERLAY MODAL -->
     <div id="modal-overlay" onclick="closeAllModals()" class="fixed inset-0 bg-black/50 z-40 hidden transition-opacity duration-300 opacity-0"></div>
+
+    <!-- TAFSIR MODAL -->
+    <div id="tafsir-modal" class="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl z-50 h-[80vh] flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.1)] transform translate-y-full modal-transition md:max-w-lg md:mx-auto md:rounded-2xl md:bottom-4 md:w-[90%]">
+        <div class="flex justify-between items-center p-4 border-b border-gray-100 bg-white rounded-t-2xl shrink-0">
+            <div>
+                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2"><i class="fa-solid fa-book-open-reader text-emerald-600"></i> Tafsir Ayat</h3>
+                <p id="tafsir-subtitle" class="text-xs text-slate-500 font-medium">Memuat sumber...</p>
+            </div>
+            <button onclick="closeAllModals()" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div id="tafsir-content-area" class="flex-grow overflow-y-auto p-6 text-slate-700 leading-relaxed text-sm tafsir-content bg-slate-50">
+            <!-- Content will be injected here -->
+            <div class="flex flex-col items-center justify-center h-full text-slate-400 gap-2">
+                <i class="fa-solid fa-circle-notch fa-spin text-2xl text-emerald-500"></i>
+                <span class="text-xs">Mengambil data tafsir...</span>
+            </div>
+        </div>
+    </div>
 
     <!-- SETTINGS MODAL -->
     <div id="settings-modal" class="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl z-50 p-6 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] transform translate-y-full modal-transition md:max-w-lg md:mx-auto md:rounded-2xl md:bottom-4 md:w-[90%]">
@@ -228,6 +251,7 @@
             overlay.classList.add('opacity-0');
             modals.forEach(m => m.classList.remove('modal-open'));
             setTimeout(() => overlay.classList.add('hidden'), 300);
+            // Stop audio if modal closed manually? No, keep audio playing.
         }
         function resetSettings() { updateFontScale('arabic', 1); updateFontScale('translation', 1); }
 
@@ -364,7 +388,7 @@
         // ==========================================
         // 5. UI RENDERERS
         // ==========================================
-        const AppState = { currentView: 'home', data: null, currentIndex: 0, isRTL: false, currentParams: null, quranListCache: null, currentSurahData: null };
+        const AppState = { currentView: 'home', data: null, currentIndex: 0, isRTL: false, currentParams: null, quranListCache: null, currentSurahData: null, tafsirCache: {} };
         const root = document.getElementById('app-root');
         
         // Global Audio Variables
@@ -589,7 +613,7 @@
                             </div>
 
                             <!-- Action Buttons -->
-                            <div class="flex items-center gap-3 pt-3 border-t border-slate-50">
+                            <div class="flex items-center gap-2 pt-3 border-t border-slate-50">
                                 <button id="btn-audio-${index}" onclick="handleAyatAction('play', ${index})" class="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-xs hover:bg-emerald-100 transition-colors border border-emerald-100">
                                     <i class="fa-solid fa-play ml-0.5"></i>
                                 </button>
@@ -598,6 +622,10 @@
                                 </button>
                                 <button onclick="handleAyatAction('share', ${index})" class="w-8 h-8 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center text-xs hover:bg-slate-100 hover:text-slate-600 transition-colors border border-slate-100">
                                     <i class="fa-solid fa-share-nodes"></i>
+                                </button>
+                                <div class="flex-grow"></div>
+                                <button onclick="openTafsir(${surahNo}, ${ayat.nomorAyat})" class="px-3 py-1.5 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center text-[10px] font-bold hover:bg-slate-200 transition-colors border border-slate-200 gap-1.5">
+                                    <i class="fa-solid fa-book-open-reader text-emerald-600"></i> Tafsir
                                 </button>
                             </div>
                         </div>
@@ -674,7 +702,50 @@
         }
 
         // ==========================================
-        // 7. SLIDER VIEW MODIFIED (Switcher)
+        // 7. TAFSIR LOGIC
+        // ==========================================
+        async function fetchTafsir(surahNo) {
+             if (AppState.tafsirCache[surahNo]) return AppState.tafsirCache[surahNo];
+             try {
+                 const res = await fetch(`https://equran.id/api/v2/tafsir/${surahNo}`);
+                 const json = await res.json();
+                 if(json.code === 200) {
+                     AppState.tafsirCache[surahNo] = json.data.tafsir;
+                     return json.data.tafsir;
+                 }
+                 throw new Error("Gagal mengambil tafsir");
+             } catch(e) {
+                 return null;
+             }
+        }
+
+        async function openTafsir(surahNo, ayatNo) {
+            openModal('tafsir-modal');
+            const titleEl = document.querySelector('#tafsir-modal h3');
+            const subEl = document.getElementById('tafsir-subtitle');
+            const contentEl = document.getElementById('tafsir-content-area');
+            
+            // Set initial state
+            titleEl.innerHTML = `<i class="fa-solid fa-book-open-reader text-emerald-600 mr-2"></i> Tafsir Ayat ${ayatNo}`;
+            subEl.innerText = "Sumber: Kemenag RI";
+            contentEl.innerHTML = `<div class="flex flex-col items-center justify-center h-full text-slate-400 gap-2"><i class="fa-solid fa-circle-notch fa-spin text-2xl text-emerald-500"></i><span class="text-xs">Mengambil data tafsir...</span></div>`;
+
+            const tafsirData = await fetchTafsir(surahNo);
+            
+            if(tafsirData) {
+                const ayatTafsir = tafsirData.find(t => t.ayat === ayatNo);
+                if(ayatTafsir) {
+                    contentEl.innerHTML = `<p>${ayatTafsir.teks}</p>`;
+                } else {
+                    contentEl.innerHTML = `<p class="text-center text-red-500">Tafsir untuk ayat ini tidak ditemukan.</p>`;
+                }
+            } else {
+                 contentEl.innerHTML = `<div class="flex flex-col items-center justify-center h-full text-slate-400 gap-2"><i class="fa-solid fa-triangle-exclamation text-2xl text-red-500"></i><span class="text-xs text-center">Gagal memuat tafsir.<br>Pastikan koneksi internet lancar.</span><button onclick="openTafsir(${surahNo}, ${ayatNo})" class="mt-2 text-emerald-600 font-bold underline">Coba Lagi</button></div>`;
+            }
+        }
+
+        // ==========================================
+        // 8. SLIDER VIEW MODIFIED (Switcher)
         // ==========================================
         function renderSliderView(dataType, title, isRTL, isCombined = false) {
             let data = (dataType === 'favorites') ? getBookmarks() : (DB[dataType] || []);

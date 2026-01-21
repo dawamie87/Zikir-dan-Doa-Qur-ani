@@ -112,13 +112,8 @@
         }
         .heart-animate { animation: heart-pop 0.3s ease-out; }
 
-        .settings-modal { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .settings-open { transform: translateY(0) !important; }
-        
-        /* Shalat Card Gradient */
-        .shalat-gradient {
-            background: linear-gradient(135deg, #10b981 0%, #047857 100%);
-        }
+        .modal-transition { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .modal-open { transform: translateY(0) !important; }
     </style>
 </head>
 <body>
@@ -133,12 +128,14 @@
         <span id="toast-msg">Memuat data...</span>
     </div>
 
+    <!-- OVERLAY MODAL -->
+    <div id="modal-overlay" onclick="closeAllModals()" class="fixed inset-0 bg-black/50 z-40 hidden transition-opacity duration-300 opacity-0"></div>
+
     <!-- SETTINGS MODAL -->
-    <div id="settings-overlay" onclick="toggleSettings(false)" class="fixed inset-0 bg-black/50 z-40 hidden transition-opacity duration-300 opacity-0"></div>
-    <div id="settings-modal" class="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl z-50 p-6 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] transform translate-y-full settings-modal md:max-w-lg md:mx-auto md:rounded-2xl md:bottom-4 md:w-[90%]">
+    <div id="settings-modal" class="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl z-50 p-6 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] transform translate-y-full modal-transition md:max-w-lg md:mx-auto md:rounded-2xl md:bottom-4 md:w-[90%]">
         <div class="flex justify-between items-center mb-6">
             <h3 class="text-lg font-bold text-slate-800"><i class="fa-solid fa-sliders mr-2 text-emerald-600"></i>Tampilan</h3>
-            <button onclick="toggleSettings(false)" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200">
+            <button onclick="closeAllModals()" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200">
                 <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
@@ -148,7 +145,6 @@
                 <span class="text-xs text-emerald-600 font-bold" id="lbl-arabic-size">100%</span>
             </div>
             <input type="range" min="0.8" max="2.0" step="0.1" value="1" id="input-arabic-size" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600">
-            <div class="mt-2 text-right dir-rtl"><span class="font-arabic-dynamic text-emerald-800">بِسْمِ اللَّهِ</span></div>
         </div>
         <div class="mb-4">
             <div class="flex justify-between mb-2">
@@ -156,9 +152,28 @@
                 <span class="text-xs text-emerald-600 font-bold" id="lbl-latin-size">100%</span>
             </div>
             <input type="range" min="0.8" max="1.6" step="0.1" value="1" id="input-latin-size" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600">
-            <p class="font-latin-dynamic text-slate-500 mt-2">Contoh teks terjemahan.</p>
         </div>
         <button onclick="resetSettings()" class="text-xs text-slate-400 underline hover:text-emerald-600 w-full text-center mt-4">Reset ke Default</button>
+    </div>
+
+    <!-- SUPPORT MODAL -->
+    <div id="support-modal" class="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl z-50 p-6 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] transform translate-y-full modal-transition md:max-w-lg md:mx-auto md:rounded-2xl md:bottom-4 md:w-[90%] text-center">
+        <div class="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4 border border-emerald-100">
+            <i class="fa-solid fa-mug-hot"></i>
+        </div>
+        <h3 class="text-xl font-bold text-slate-800 mb-2">Support Pengembangan</h3>
+        <p class="text-sm text-slate-500 mb-6 leading-relaxed px-4">Jika aplikasi ini bermanfaat bagi Anda, dukung pengembangannya melalui infaq/donasi ke:</p>
+        
+        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 mb-6">
+            <p class="text-xs text-slate-400 uppercase font-bold tracking-widest mb-1">Bank Central Asia (BCA)</p>
+            <div class="flex items-center justify-center gap-3 mb-1">
+                <span class="text-2xl font-mono font-bold text-slate-800">676030548</span>
+                <button onclick="copyToClipboard('676030548')" class="text-emerald-600 text-sm active:scale-90 transition-transform"><i class="fa-solid fa-copy"></i></button>
+            </div>
+            <p class="text-sm font-medium text-slate-600">an. Ahmad Dawami</p>
+        </div>
+
+        <button onclick="closeAllModals()" class="w-full py-3.5 bg-emerald-600 text-white rounded-xl font-bold shadow-lg shadow-emerald-200 active:scale-95 transition-all">Tutup</button>
     </div>
 
     <script>
@@ -198,13 +213,32 @@
             document.getElementById(`lbl-${type}-size`).innerText = Math.round(value * 100) + "%";
             if(save) localStorage.setItem(`scale-${type}`, value);
         }
-        function toggleSettings(show) {
-            const overlay = document.getElementById('settings-overlay');
-            const modal = document.getElementById('settings-modal');
-            if (show) { overlay.classList.remove('hidden'); setTimeout(() => overlay.classList.remove('opacity-0'), 10); modal.classList.add('settings-open'); } 
-            else { overlay.classList.add('opacity-0'); modal.classList.remove('settings-open'); setTimeout(() => overlay.classList.add('hidden'), 300); }
+        
+        function openModal(id) {
+            const overlay = document.getElementById('modal-overlay');
+            const modal = document.getElementById(id);
+            overlay.classList.remove('hidden');
+            setTimeout(() => overlay.classList.remove('opacity-0'), 10);
+            modal.classList.add('modal-open');
+        }
+        function closeAllModals() {
+            const overlay = document.getElementById('modal-overlay');
+            const modals = document.querySelectorAll('.modal-transition');
+            overlay.classList.add('opacity-0');
+            modals.forEach(m => m.classList.remove('modal-open'));
+            setTimeout(() => overlay.classList.add('hidden'), 300);
         }
         function resetSettings() { updateFontScale('arabic', 1); updateFontScale('latin', 1); }
+
+        function copyToClipboard(text) {
+            const temp = document.createElement('input');
+            temp.value = text;
+            document.body.appendChild(temp);
+            temp.select();
+            document.execCommand('copy');
+            document.body.removeChild(temp);
+            showToast("Nomor Rekening berhasil disalin");
+        }
 
         // ==========================================
         // 2. LOGIC PRAYER TIMES
@@ -236,16 +270,11 @@
         // 3. LOGIC BOOKMARK & TASBIH
         // ==========================================
         const BOOKMARK_KEY = "dzikir_app_bookmarks";
-        
-        function getBookmarks() {
-            return JSON.parse(localStorage.getItem(BOOKMARK_KEY) || "[]");
-        }
-
+        function getBookmarks() { return JSON.parse(localStorage.getItem(BOOKMARK_KEY) || "[]"); }
         function isBookmarked(item) {
             const bookmarks = getBookmarks();
             return bookmarks.some(b => b.title === item.title && b.arabic.substring(0, 20) === item.arabic.substring(0, 20));
         }
-
         function toggleBookmark(index) {
             const item = AppState.data[index];
             let bookmarks = getBookmarks();
@@ -261,13 +290,10 @@
             if(btn) {
                 const isFav = isBookmarked(item);
                 btn.innerHTML = isFav ? '<i class="fa-solid fa-heart"></i>' : '<i class="fa-regular fa-heart"></i>';
-                btn.classList.toggle('text-rose-500', isFav);
-                btn.classList.toggle('text-slate-300', !isFav);
-                btn.classList.add('heart-animate');
-                setTimeout(() => btn.classList.remove('heart-animate'), 300);
+                btn.classList.toggle('text-rose-500', isFav); btn.classList.toggle('text-slate-300', !isFav);
+                btn.classList.add('heart-animate'); setTimeout(() => btn.classList.remove('heart-animate'), 300);
             }
         }
-
         function handleTasbihTap(btn, targetCount) {
             event.stopPropagation();
             const countDisplay = btn.querySelector('.tasbih-counter');
@@ -284,35 +310,27 @@
                 }
             } else {
                 if(confirm("Ulangi hitungan?")) {
-                    btn.dataset.current = 0;
-                    btn.classList.remove('bg-emerald-600', 'text-white', 'border-emerald-600');
+                    btn.dataset.current = 0; btn.classList.remove('bg-emerald-600', 'text-white', 'border-emerald-600');
                     btn.classList.add('bg-emerald-50', 'text-emerald-700', 'border-emerald-200');
                     btn.innerHTML = `<i class="fa-solid fa-fingerprint mr-2"></i> <span class="tasbih-counter">0</span> / ${targetCount}`;
                 }
             }
         }
- 
+
         // ==========================================
         // 4. DATABASE & FETCH
         // ==========================================
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw8J1hsT-Nb9eBOwDWkPG9Iff6d6Vb9lThA0RjIioCorPRpD3A5oYQ8fIjgXcjQ8J8fAw/exec"; 
         const CACHE_KEY = "dzikir_app_data_v1";
-        // Diubah: belajarTajwid diganti menjadi bacaanShalat
         let DB = { dzikirPagi: [], dzikirPetang: [], doaHarian: [], dzikirShalat: [], doaQurani: [], bacaanShalat: [] };
 
         function smartNormalize(data) {
             const normalized = {};
-            // Ditambahkan: 'id': 'id'
             const keyMap = { 'id': 'id', 'judul': 'title', 'nama': 'title', 'arab': 'arabic', 'teks': 'arabic', 'latin': 'latin', 'terjemah': 'translation', 'faedah': 'faedah', 'jumlah': 'count', 'sumber': 'source', 'isi': 'content', 'contoh': 'example' };
             Object.keys(data).forEach(k => {
                 normalized[k] = data[k].map(i => {
                     const n = {}; Object.keys(i).forEach(rk => n[keyMap[rk.toLowerCase().trim()] || rk.toLowerCase().trim()] = i[rk]); return n;
-                }).filter(i => {
-                    const hasArab = i.arabic && i.arabic.toString().trim().length > 3;
-                    const hasTitle = i.title && i.title.toString().trim().length > 2;
-                    const hasContent = i.content && i.content.toString().trim().length > 3;
-                    return hasArab || hasTitle || hasContent;
-                });
+                }).filter(i => (i.arabic && i.arabic.toString().length > 3) || (i.title && i.title.toString().length > 2));
             });
             return normalized;
         }
@@ -326,23 +344,12 @@
 
         async function fetchData() {
             const cached = localStorage.getItem(CACHE_KEY);
-            let hasCache = false;
-            if(cached) { try { DB = JSON.parse(cached); hasCache = true; if(AppState.currentView !== 'home') render(AppState.currentView, AppState.currentParams || {type:'dzikirPagi', rtl:true}); } catch(e){} }
-            
-            if(!hasCache) showToast("Memuat data...");
+            if(cached) { try { DB = JSON.parse(cached); if(AppState.currentView !== 'home') render(AppState.currentView, AppState.currentParams); } catch(e){} }
             if(!SCRIPT_URL) return;
-
             try {
                 const res = await fetch(SCRIPT_URL + "?t=" + new Date().getTime());
-                if(!res.ok) throw new Error("Err");
-                const json = await res.json();
-                if(json && Object.keys(json).length > 0) {
-                    DB = smartNormalize(json);
-                    localStorage.setItem(CACHE_KEY, JSON.stringify(DB));
-                    if(Object.values(DB).flat().length > 0) hasCache ? showToast("Data Diperbarui") : showToast("Data Siap!");
-                    if(AppState.currentView !== 'home') render(AppState.currentView, AppState.currentParams);
-                }
-            } catch(e) { if(!hasCache) showToast("Gagal Terhubung", true); }
+                if(res.ok) { const json = await res.json(); DB = smartNormalize(json); localStorage.setItem(CACHE_KEY, JSON.stringify(DB)); if(AppState.currentView !== 'home') render(AppState.currentView, AppState.currentParams); }
+            } catch(e) {}
         }
 
         // ==========================================
@@ -352,8 +359,7 @@
         const root = document.getElementById('app-root');
 
         function navigateTo(view, params = null) {
-            AppState.currentParams = params;
-            root.style.opacity = '0.7';
+            AppState.currentParams = params; root.style.opacity = '0.7';
             setTimeout(() => { AppState.currentView = view; AppState.currentIndex = 0; render(view, params); root.style.opacity = '1'; root.scrollTop = 0; }, 100);
         }
 
@@ -362,7 +368,6 @@
             switch(view) {
                 case 'home': renderHome(); break;
                 case 'slider': renderSliderView(params.type, params.title, params.rtl); break;
-                case 'list': renderListView(params.type, params.title); break;
                 default: renderHome();
             }
         }
@@ -382,46 +387,31 @@
                         <div class="flex gap-2">
                             <button id="btn-install-app" onclick="installPWA()" class="hidden bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-full text-[10px] font-bold shadow-sm hover:bg-emerald-100 transition-colors flex items-center gap-1 border border-emerald-100"><i class="fa-solid fa-download"></i> Install</button>
                             <button onclick="navigateTo('slider', {type:'favorites', title:'Favorit Saya', rtl:true})" class="w-9 h-9 rounded-full bg-rose-50 text-rose-500 hover:bg-rose-100 transition-colors flex items-center justify-center border border-rose-100 shadow-sm"><i class="fa-solid fa-heart"></i></button>
-                            <button onclick="toggleSettings(true)" class="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 transition-colors shadow-sm"><i class="fa-solid fa-gear"></i></button>
+                            <!-- Ikon Give Coffee / Support -->
+                            <button onclick="openModal('support-modal')" class="w-9 h-9 rounded-full bg-amber-50 flex items-center justify-center text-amber-600 hover:bg-amber-100 transition-colors shadow-sm border border-amber-100"><i class="fa-solid fa-mug-hot"></i></button>
                         </div>
                     </div>
 
-                    <!-- PRAYER CARD -->
                     <div id="prayer-schedule-card" class="mx-6 mb-4 p-4 bg-gradient-to-br from-emerald-600 to-emerald-800 rounded-2xl text-white shadow-xl shadow-emerald-200/50 relative overflow-hidden shrink-0 z-10">
                         <div class="absolute -bottom-4 -right-2 opacity-10 rotate-12"><i class="fa-solid fa-mosque text-8xl"></i></div>
                         <div class="relative z-10 flex justify-between items-center mb-3">
-                            <div>
-                                <div class="flex items-center text-emerald-100 text-[11px] font-medium mb-1"><i class="fa-solid fa-location-dot mr-1.5"></i> <span id="location-name">Memuat...</span></div>
-                                <div class="text-xl font-bold tracking-tight leading-none" id="next-prayer-name">...</div>
-                            </div>
-                            <div class="text-right">
-                                <div class="text-[10px] text-emerald-100 uppercase tracking-wider mb-0.5">Menuju Shalat</div>
-                                <div class="text-3xl font-bold font-mono leading-none tracking-tight" id="next-prayer-time">--:--</div>
-                            </div>
+                            <div><div class="flex items-center text-emerald-100 text-[11px] font-medium mb-1"><i class="fa-solid fa-location-dot mr-1.5"></i> <span id="location-name">Memuat...</span></div><div class="text-xl font-bold tracking-tight leading-none" id="next-prayer-name">...</div></div>
+                            <div class="text-right"><div class="text-[10px] text-emerald-100 uppercase tracking-wider mb-0.5">Menuju Shalat</div><div class="text-3xl font-bold font-mono leading-none tracking-tight" id="next-prayer-time">--:--</div></div>
                         </div>
-                        <div id="prayer-grid" class="relative z-10 grid grid-cols-5 gap-2 pt-3 border-t border-white/10">
-                            <div class="text-center text-emerald-100 text-[10px]">...</div>
-                        </div>
+                        <div id="prayer-grid" class="relative z-10 grid grid-cols-5 gap-2 pt-3 border-t border-white/10"><div class="text-center text-emerald-100 text-[10px]">...</div></div>
                     </div>
 
-                    <!-- MENU GRID - Modified for full page look -->
                     <div class="flex-grow overflow-y-auto hide-scrollbar px-6 pb-4 flex flex-col justify-between">
-                        <div>
-                            <div class="grid grid-cols-2 gap-4">
+                        <div><div class="grid grid-cols-2 gap-4">
                                 ${MenuCard("Dzikir Pagi", "fa-sun", "slider", {type:'dzikirPagi', title:'Dzikir Pagi', rtl:true})}
                                 ${MenuCard("Dzikir Petang", "fa-cloud-moon", "slider", {type:'dzikirPetang', title:'Dzikir Petang', rtl:true})}
                                 ${MenuCard("Doa Qurani", "fa-quran", "slider", {type:'doaQurani', title:'Doa-Doa Qurani', rtl:true})}
                                 ${MenuCard("Doa Harian", "fa-hands-praying", "slider", {type:'doaHarian', title:'Doa Harian', rtl:true})}
                                 ${MenuCard("Dzikir Shalat", "fa-mosque", "slider", {type:'dzikirShalat', title:'Dzikir Setelah Shalat', rtl:true})} 
                                 ${MenuCard("Bacaan Shalat", "fa-book-open", "slider", {type:'bacaanShalat', title:'Bacaan Shalat', rtl:true})}
-                            </div>
-                        </div>
-                        
-                        <!-- Footer Area inside scrollable -->
+                        </div></div>
                         <div class="mt-auto pt-6 pb-2">
-                             <div class="p-3 bg-emerald-50/60 rounded-xl border border-emerald-100 text-center mx-1 shadow-sm mb-4">
-                                <p class="text-xs font-medium text-emerald-800 leading-relaxed italic">"${quote}"</p>
-                            </div>
+                             <div class="p-3 bg-emerald-50/60 rounded-xl border border-emerald-100 text-center mx-1 shadow-sm mb-4"><p class="text-xs font-medium text-emerald-800 leading-relaxed italic">"${quote}"</p></div>
                             <p class="text-[10px] text-gray-400 font-semibold tracking-wide uppercase text-center">© Ahmad Dawami</p>
                         </div>
                     </div>
@@ -430,43 +420,27 @@
             setTimeout(fetchPrayerTimes, 100);
         }
 
-        // UPDATED MENU CARD - Slightly smaller
         function MenuCard(t, i, v, p) {
             return `<button onclick="navigateTo('${v}', ${JSON.stringify(p).replace(/"/g, "&quot;")})" class="group relative bg-white p-3 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center gap-2 transition-all duration-300 hover:shadow-lg hover:border-emerald-300 hover:-translate-y-1 h-32 w-full">
-                <div class="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl group-hover:bg-emerald-600 group-hover:text-white transition-colors duration-300 shadow-sm ring-1 ring-emerald-100">
-                    <i class="fa-solid ${i}"></i>
-                </div>
+                <div class="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl group-hover:bg-emerald-600 group-hover:text-white transition-colors duration-300 shadow-sm ring-1 ring-emerald-100"><i class="fa-solid ${i}"></i></div>
                 <span class="text-sm font-bold text-slate-700 leading-tight text-center px-1">${t}</span>
             </button>`;
         }
 
         function renderSliderView(dataType, title, isRTL) {
-            let data = [];
-            if(dataType === 'favorites') {
-                data = getBookmarks();
-            } else {
-                data = DB[dataType] || [];
-            }
-            
+            let data = (dataType === 'favorites') ? getBookmarks() : (DB[dataType] || []);
             AppState.data = data; AppState.currentIndex = 0; AppState.isRTL = isRTL;
-            
             if (data.length === 0) { 
-                const emptyMsg = dataType === 'favorites' ? "Belum ada doa yang difavoritkan." : "Data Kosong";
-                root.innerHTML = `<div class="h-full flex flex-col items-center justify-center bg-white p-10 text-center"><i class="fa-solid fa-heart-crack text-4xl text-slate-300 mb-4"></i><h3 class="text-xl font-bold text-slate-800 mb-2">${emptyMsg}</h3><button onclick="navigateTo('home')" class="px-6 py-2 bg-emerald-600 text-white rounded-full font-medium">Kembali</button></div>`; 
-                return; 
+                root.innerHTML = `<div class="h-full flex flex-col items-center justify-center bg-white p-10 text-center"><i class="fa-solid fa-heart-crack text-4xl text-slate-300 mb-4"></i><h3 class="text-xl font-bold text-slate-800 mb-2">Data Kosong</h3><button onclick="navigateTo('home')" class="px-6 py-2 bg-emerald-600 text-white rounded-full font-medium">Kembali</button></div>`; return; 
             }
-
             const flexDir = isRTL ? 'flex-row-reverse' : 'flex-row';
             const trackWidth = data.length * 100;
-            const leftAction = isRTL ? 1 : -1;
-            const rightAction = isRTL ? -1 : 1;
-
             root.innerHTML = `
                 <div class="h-full flex flex-col bg-white animate-fade-in relative">
                     <div class="flex items-center justify-between px-4 py-4 border-b border-gray-100 z-30 bg-white/95 backdrop-blur-sm sticky top-0 h-16">
                         <button onclick="navigateTo('home')" class="w-10 h-10 flex items-center justify-center text-slate-500 hover:bg-slate-100 rounded-full transition-colors"><i class="fa-solid fa-arrow-left"></i></button>
                         <h2 class="text-lg font-bold text-slate-800 tracking-tight">${title}</h2>
-                        <button onclick="toggleSettings(true)" class="w-10 h-10 flex items-center justify-center text-emerald-600 hover:bg-emerald-50 rounded-full transition-colors"><i class="fa-solid fa-gear"></i></button>
+                        <button onclick="openModal('settings-modal')" class="w-10 h-10 flex items-center justify-center text-emerald-600 hover:bg-emerald-50 rounded-full transition-colors"><i class="fa-solid fa-sliders"></i></button>
                     </div>
                     <div class="flex-grow relative overflow-hidden slider-viewport bg-slate-50">
                         <div id="slides-track" class="h-full flex ${flexDir} items-stretch transition-transform duration-300 ease-out will-change-transform" style="width: ${trackWidth}%; touch-action: pan-y;">
@@ -474,79 +448,47 @@
                         </div>
                     </div>
                     <div class="px-5 py-2 border-t border-gray-100 bg-white z-30 flex justify-between items-center shadow-[0_-4px_20px_rgba(0,0,0,0.03)] h-20">
-                        <button onclick="handleNavClick(${leftAction})" class="w-12 h-12 rounded-full bg-slate-50 text-slate-600 hover:bg-slate-200 flex items-center justify-center text-lg active:scale-95 transition-all"><i class="fa-solid fa-chevron-left"></i></button>
-                        <div class="flex gap-1.5 overflow-hidden max-w-[120px]">
-                            <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full"><span id="slide-indicator">1/${data.length}</span></span>
-                        </div>
-                        <button onclick="handleNavClick(${rightAction})" class="w-12 h-12 rounded-full bg-emerald-600 text-white shadow-lg hover:bg-emerald-700 flex items-center justify-center text-lg active:scale-95 transition-all"><i class="fa-solid fa-chevron-right"></i></button>
+                        <button onclick="handleNavClick(${isRTL?1:-1})" class="w-12 h-12 rounded-full bg-slate-50 text-slate-600 hover:bg-slate-200 flex items-center justify-center text-lg"><i class="fa-solid fa-chevron-left"></i></button>
+                        <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full"><span id="slide-indicator">1/${data.length}</span></span>
+                        <button onclick="handleNavClick(${isRTL?-1:1})" class="w-12 h-12 rounded-full bg-emerald-600 text-white shadow-lg flex items-center justify-center text-lg"><i class="fa-solid fa-chevron-right"></i></button>
                     </div>
                 </div>`;
-            
-            initSwipeLogic();
-            updateSlidePosition(); 
-            window.addEventListener('resize', updateSlidePosition);
+            initSwipeLogic(); updateSlidePosition(); 
         }
 
         function SliderCard(item, total, index) {
             const w = 100/total;
-            const t = item.title||"", a = item.arabic||"", l = item.latin?`<p class="font-latin-dynamic text-emerald-700 font-medium italic mb-4 opacity-90">${item.latin}</p>`:"", tr = item.translation||"", f = item.faedah?`<div class="mt-4 mx-4 p-4 bg-amber-50 rounded-xl text-sm text-amber-900 border border-amber-100 shadow-sm font-latin-dynamic"><strong class="block text-amber-700 mb-1 text-xs uppercase"><i class="fa-solid fa-star mr-1"></i> REFERENSI AYAT / HADITS</strong>${item.faedah}</div>`:"", s = item.source?`<span class="block text-xs text-slate-400 font-medium uppercase mb-2">${item.source}</span>`:"";
             const cnt = parseInt(item.count || 1);
-            
-            // Tasbih Button
-            let btn = cnt > 1 ? `<button onclick="handleTasbihTap(this, ${cnt})" data-current="0" class="group relative inline-flex items-center justify-center bg-emerald-50 text-emerald-700 font-bold text-sm px-6 py-2.5 rounded-full mb-4 shadow-sm active:scale-95 transition-all border border-emerald-200"><i class="fa-solid fa-fingerprint mr-2"></i> <span class="tasbih-counter">0</span> / ${cnt}</button>` : `<div class="inline-flex items-center justify-center bg-emerald-50 text-emerald-700 font-bold text-xs px-3 py-1.5 rounded-full mb-4 shadow-sm border border-emerald-100"><i class="fa-solid fa-rotate mr-2 text-[10px]"></i> Baca 1x</div>`;
-            
-            // Heart Icon Button
             const isFav = isBookmarked(item);
-            const heartColor = isFav ? "text-rose-500" : "text-slate-300";
-            const heartIcon = isFav ? "fa-solid fa-heart" : "fa-regular fa-heart";
-            
-            return `
-            <div class="h-full flex-shrink-0 overflow-y-auto hide-scrollbar flex flex-col items-center relative" style="width: ${w}%">
-                <button id="btn-heart-${index}" onclick="toggleBookmark(${index})" class="absolute top-4 right-4 z-20 w-10 h-10 flex items-center justify-center bg-white/80 rounded-full shadow-sm ${heartColor} text-xl active:scale-90 transition-all border border-gray-100"><i class="fa-solid fa-heart"></i></button>
+            return `<div class="h-full flex-shrink-0 overflow-y-auto hide-scrollbar flex flex-col items-center relative" style="width: ${w}%">
+                <button id="btn-heart-${index}" onclick="toggleBookmark(${index})" class="absolute top-4 right-4 z-20 w-10 h-10 flex items-center justify-center bg-white/80 rounded-full shadow-sm ${isFav?"text-rose-500":"text-slate-300"} text-xl active:scale-90 transition-all border border-gray-100"><i class="fa-solid fa-heart"></i></button>
                 <div class="w-full min-h-full flex flex-col items-center py-6 px-4 md:px-8">
                     <div class="my-auto w-full flex flex-col items-center max-w-md">
-                        ${btn}${s}
-                        <h3 class="text-emerald-700 font-bold text-lg mb-4 text-center leading-tight font-latin-dynamic">${t}</h3>
-                        <div class="w-full mb-6 text-center" dir="rtl"><p class="font-arabic-dynamic text-black leading-[2.0] tracking-wide drop-shadow-sm select-text">${a}</p></div>
-                        <div class="w-full text-center pb-4">${l}<p class="font-latin-dynamic text-slate-600 text-sm font-light">${tr}</p>${f}</div>
+                        ${cnt > 1 ? `<button onclick="handleTasbihTap(this, ${cnt})" data-current="0" class="group relative inline-flex items-center justify-center bg-emerald-50 text-emerald-700 font-bold text-sm px-6 py-2.5 rounded-full mb-4 shadow-sm border border-emerald-200"><i class="fa-solid fa-fingerprint mr-2"></i> <span class="tasbih-counter">0</span> / ${cnt}</button>` : `<div class="inline-flex items-center justify-center bg-emerald-50 text-emerald-700 font-bold text-xs px-3 py-1.5 rounded-full mb-4 shadow-sm border border-emerald-100">Baca 1x</div>`}
+                        <h3 class="text-emerald-700 font-bold text-lg mb-4 text-center leading-tight font-latin-dynamic">${item.title||""}</h3>
+                        <div class="w-full mb-6 text-center" dir="rtl"><p class="font-arabic-dynamic text-black leading-[2.0] tracking-wide select-text">${item.arabic||""}</p></div>
+                        <div class="w-full text-center pb-4">
+                            ${item.latin?`<p class="font-latin-dynamic text-emerald-700 font-medium italic mb-4 opacity-90">${item.latin}</p>`:""}
+                            <p class="font-latin-dynamic text-slate-600 text-sm font-light">${item.translation||""}</p>
+                            ${item.faedah?`<div class="mt-4 mx-4 p-4 bg-amber-50 rounded-xl text-sm text-amber-900 border border-amber-100 shadow-sm font-latin-dynamic text-left"><strong class="block text-amber-700 mb-1 text-xs uppercase"><i class="fa-solid fa-star mr-1"></i> REFERENSI</strong>${item.faedah}</div>`:""}
+                        </div>
                     </div>
                 </div>
             </div>`;
         }
 
-        function renderListView(dataType, title) {
-            const data = DB[dataType] || [];
-            root.innerHTML = `<div class="h-full flex flex-col bg-slate-50 animate-fade-in rounded-t-xl"><div class="flex items-center gap-4 p-4 bg-white shadow-sm sticky top-0 z-30 h-16"><button onclick="navigateTo('home')" class="text-slate-500 hover:text-emerald-600 w-8 h-8 flex items-center justify-center"><i class="fa-solid fa-arrow-left text-lg"></i></button><h2 class="text-lg font-bold text-slate-800">${title}</h2></div><div class="flex-grow overflow-y-auto p-4 space-y-4 pb-20">${data.map(item => `<div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 hover:border-emerald-200 transition-colors"><h3 class="font-bold text-emerald-700 mb-2 text-lg font-latin-dynamic">${item.title}</h3><p class="text-slate-600 text-sm leading-relaxed mb-4 font-latin-dynamic">${item.content}</p><div class="bg-emerald-50/50 p-4 rounded-xl border border-emerald-100 flex flex-col items-center gap-2"><span class="text-[10px] text-emerald-600 font-bold uppercase tracking-wider bg-white px-2 py-0.5 rounded shadow-sm">Contoh</span><span class="font-arabic-dynamic text-3xl text-black mt-1 leading-[2.5]">${item.example}</span></div></div>`).join('')}</div></div>`;
-        }
-
         function updateSlidePosition() {
             const track = document.getElementById('slides-track'); if(!track) return;
-            const idx = AppState.currentIndex, len = AppState.data.length, rtl = AppState.isRTL, step = 100/len;
-            const translateX = rtl ? - (len - 1 - idx) * step : -(idx * step);
-            track.style.transform = `translateX(${translateX}%)`;
+            const idx = AppState.currentIndex, len = AppState.data.length, step = 100/len;
+            track.style.transform = `translateX(${AppState.isRTL ? - (len - 1 - idx) * step : -(idx * step)}%)`;
             document.getElementById('slide-indicator').innerText = `${idx+1}/${len}`;
         }
-
-        window.handleNavClick = function(dir) {
-            let next = AppState.currentIndex + dir;
-            if(next >= 0 && next < AppState.data.length) { AppState.currentIndex = next; updateSlidePosition(); }
-        }
-
+        window.handleNavClick = function(dir) { let n = AppState.currentIndex + dir; if(n >= 0 && n < AppState.data.length) { AppState.currentIndex = n; updateSlidePosition(); } }
         function initSwipeLogic() {
             const wrap = document.querySelector('.slider-viewport'); if(!wrap) return;
-            let sx = 0, drag = false;
-            wrap.addEventListener('touchstart', e => { sx = e.touches[0].clientX; drag = true; }, {passive: true});
-            wrap.addEventListener('touchend', e => { 
-                if(!drag) return; drag = false; 
-                const diff = sx - e.changedTouches[0].clientX; 
-                if(Math.abs(diff)>50) {
-                    const isSwipeLeft = diff > 0; 
-                    if (AppState.isRTL) { if (!isSwipeLeft) handleNavClick(1); else handleNavClick(-1); } 
-                    else { if (isSwipeLeft) handleNavClick(1); else handleNavClick(-1); }
-                }
-            });
+            let sx = 0; wrap.addEventListener('touchstart', e => { sx = e.touches[0].clientX; }, {passive: true});
+            wrap.addEventListener('touchend', e => { let diff = sx - e.changedTouches[0].clientX; if(Math.abs(diff)>50) handleNavClick(AppState.isRTL ? (diff<0?1:-1) : (diff>0?1:-1)); });
         }
-
         document.addEventListener('DOMContentLoaded', () => { initSettings(); fetchData(); renderHome(); });
     </script>
 </body>

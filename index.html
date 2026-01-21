@@ -116,6 +116,9 @@
 
         /* Custom style for Quran List */
         .quran-list-item:active { background-color: #ecfdf5; }
+        
+        /* Audio Player Styles */
+        .btn-audio-playing { background-color: #d1fae5; color: #059669; border-color: #10b981; }
     </style>
 </head>
 <body>
@@ -235,7 +238,7 @@
             temp.select();
             document.execCommand('copy');
             document.body.removeChild(temp);
-            showToast("Nomor Rekening berhasil disalin");
+            showToast("Berhasil disalin");
         }
 
         // ==========================================
@@ -353,10 +356,17 @@
         // ==========================================
         // 5. UI RENDERERS
         // ==========================================
-        const AppState = { currentView: 'home', data: null, currentIndex: 0, isRTL: false, currentParams: null, quranListCache: null };
+        const AppState = { currentView: 'home', data: null, currentIndex: 0, isRTL: false, currentParams: null, quranListCache: null, currentSurahData: null };
         const root = document.getElementById('app-root');
+        
+        // Global Audio Variables
+        let activeAudio = null;
+        let activeAudioBtn = null;
 
         function navigateTo(view, params = null) {
+            // Stop audio if navigating away
+            if(activeAudio) { activeAudio.pause(); activeAudio = null; }
+            
             AppState.currentParams = params; root.style.opacity = '0.7';
             setTimeout(() => { AppState.currentView = view; AppState.currentIndex = 0; render(view, params); root.style.opacity = '1'; root.scrollTop = 0; }, 100);
         }
@@ -427,7 +437,7 @@
         }
 
         // ==========================================
-        // 6. QURAN API INTEGRATION (Fixed)
+        // 6. QURAN API INTEGRATION (Fixed with Audio & Share)
         // ==========================================
         async function renderQuranList() {
             root.innerHTML = `
@@ -445,7 +455,6 @@
                     </div>
                 </div>`;
             
-            // Check cache first to avoid re-fetching
             if (AppState.quranListCache) {
                  renderQuranListFromData(AppState.quranListCache);
                  return;
@@ -465,7 +474,7 @@
 
         function renderQuranListFromData(data) {
              const html = data.map(surat => {
-                // FIXED: Escape apostrophes/single quotes (e.g. Al-Mu'minun) to prevent JS syntax errors in onclick
+                // Escape apostrophes for safe inline JS
                 const safeName = surat.namaLatin.replace(/'/g, "\\'");
                 return `
                 <div onclick="navigateTo('quranDetail', {surahNo: ${surat.nomor}, surahName: '${safeName}'})" class="quran-list-item flex items-center p-3 rounded-xl border border-gray-100 bg-white shadow-sm cursor-pointer transition-colors">
@@ -503,6 +512,8 @@
                 const result = await response.json();
                 if(result.code === 200) {
                     const data = result.data;
+                    AppState.currentSurahData = data; // Save to AppState for easier access
+
                     let html = `<div class="p-4 space-y-4 pb-20">`;
                     
                     // Bismillah (except Surah At-Taubah / 9)
@@ -510,25 +521,102 @@
                         html += `<div class="text-center py-6 mb-2"><span class="font-arabic-dynamic text-2xl text-emerald-800" style="font-family: var(--font-arabic);">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</span></div>`;
                     }
 
-                    html += data.ayat.map(ayat => `
-                        <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden">
+                    html += data.ayat.map((ayat, index) => {
+                        return `
+                        <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden group">
                             <div class="absolute top-0 left-0 bg-emerald-50 text-emerald-700 px-3 py-1 rounded-br-xl text-xs font-bold border-r border-b border-emerald-100">${ayat.nomorAyat}</div>
+                            
+                            <!-- Ayat Content -->
                             <div class="mt-6 mb-4 w-full text-right" dir="rtl">
                                 <p class="font-arabic-dynamic text-slate-800 leading-[2.4] select-text block mb-2">${ayat.teksArab}</p>
                             </div>
-                            <div class="text-left space-y-2">
+                            <div class="text-left space-y-2 mb-4">
                                 <p class="text-emerald-700 text-sm italic opacity-80 leading-relaxed hidden">${ayat.teksLatin}</p>
                                 <p class="font-translation-dynamic text-slate-600 leading-relaxed">${ayat.teksIndonesia}</p>
                             </div>
+
+                            <!-- Action Buttons -->
+                            <div class="flex items-center gap-3 pt-3 border-t border-slate-50">
+                                <button id="btn-audio-${index}" onclick="handleAyatAction('play', ${index})" class="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-xs hover:bg-emerald-100 transition-colors border border-emerald-100">
+                                    <i class="fa-solid fa-play ml-0.5"></i>
+                                </button>
+                                <button onclick="handleAyatAction('copy', ${index})" class="w-8 h-8 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center text-xs hover:bg-slate-100 hover:text-slate-600 transition-colors border border-slate-100">
+                                    <i class="fa-regular fa-copy"></i>
+                                </button>
+                                <button onclick="handleAyatAction('share', ${index})" class="w-8 h-8 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center text-xs hover:bg-slate-100 hover:text-slate-600 transition-colors border border-slate-100">
+                                    <i class="fa-solid fa-share-nodes"></i>
+                                </button>
+                            </div>
                         </div>
-                    `).join('');
+                    `}).join('');
                     html += `</div>`;
                     document.getElementById('ayat-container').innerHTML = html;
                 } else { throw new Error("Gagal"); }
             } catch(e) {
-                // FIXED: Added better error handling and retry with escaped name
                 const safeName = surahName.replace(/'/g, "\\'");
                 document.getElementById('ayat-container').innerHTML = `<div class="text-center p-6 text-red-500">Gagal memuat ayat. <button onclick="renderQuranDetail(${surahNo}, '${safeName}')" class="underline font-bold mt-2">Coba Lagi</button></div>`;
+            }
+        }
+
+        // Handle Audio, Copy, Share logic
+        function handleAyatAction(action, index) {
+            const ayat = AppState.currentSurahData.ayat[index];
+            const surahName = AppState.currentSurahData.namaLatin;
+            
+            if (action === 'play') {
+                const btn = document.getElementById(`btn-audio-${index}`);
+                // Try to get audio 05 (Misyari) or fallback to any available
+                const audioUrl = ayat.audio['05'] || Object.values(ayat.audio)[0]; 
+
+                if (activeAudio && activeAudio.src === audioUrl) {
+                    if (activeAudio.paused) {
+                        activeAudio.play();
+                        btn.innerHTML = '<i class="fa-solid fa-pause"></i>';
+                        btn.classList.add('btn-audio-playing');
+                    } else {
+                        activeAudio.pause();
+                        btn.innerHTML = '<i class="fa-solid fa-play ml-0.5"></i>';
+                        btn.classList.remove('btn-audio-playing');
+                    }
+                } else {
+                    if (activeAudio) {
+                        activeAudio.pause();
+                        if (activeAudioBtn) {
+                            activeAudioBtn.innerHTML = '<i class="fa-solid fa-play ml-0.5"></i>';
+                            activeAudioBtn.classList.remove('btn-audio-playing');
+                        }
+                    }
+                    activeAudio = new Audio(audioUrl);
+                    activeAudioBtn = btn;
+                    activeAudio.play();
+                    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; // Loading state
+                    
+                    activeAudio.onplaying = () => {
+                        btn.innerHTML = '<i class="fa-solid fa-pause"></i>';
+                        btn.classList.add('btn-audio-playing');
+                    };
+                    
+                    activeAudio.onended = () => {
+                        btn.innerHTML = '<i class="fa-solid fa-play ml-0.5"></i>';
+                        btn.classList.remove('btn-audio-playing');
+                        activeAudio = null;
+                    };
+                }
+            } else if (action === 'copy') {
+                const textToCopy = `${ayat.teksArab}\n\n${ayat.teksIndonesia}\n(QS. ${surahName}: ${ayat.nomorAyat})`;
+                copyToClipboard(textToCopy);
+            } else if (action === 'share') {
+                const textToShare = `${ayat.teksArab}\n\n${ayat.teksIndonesia}\n(QS. ${surahName}: ${ayat.nomorAyat})`;
+                if (navigator.share) {
+                    navigator.share({
+                        title: `QS. ${surahName}: ${ayat.nomorAyat}`,
+                        text: textToShare,
+                        url: window.location.href
+                    }).catch(console.error);
+                } else {
+                    copyToClipboard(textToShare);
+                    showToast("Link disalin (Share tidak didukung browser ini)");
+                }
             }
         }
 

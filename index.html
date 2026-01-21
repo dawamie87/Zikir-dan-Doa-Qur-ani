@@ -268,10 +268,18 @@
         }
 
         // ==========================================
-        // 3. LOGIC BOOKMARK & TASBIH
+        // 3. LOGIC BOOKMARK & TASBIH & LAST READ
         // ==========================================
         const BOOKMARK_KEY = "dzikir_app_bookmarks";
+        const LAST_READ_KEY = "dzikir_app_last_read";
+
         function getBookmarks() { return JSON.parse(localStorage.getItem(BOOKMARK_KEY) || "[]"); }
+        function getLastRead() { return JSON.parse(localStorage.getItem(LAST_READ_KEY) || "null"); }
+        
+        function setLastRead(surahNo, surahName) {
+            localStorage.setItem(LAST_READ_KEY, JSON.stringify({ surahNo, surahName, date: new Date().toISOString() }));
+        }
+
         function isBookmarked(item) {
             const bookmarks = getBookmarks();
             return bookmarks.some(b => b.title === item.title && b.arabic.substring(0, 20) === item.arabic.substring(0, 20));
@@ -437,17 +445,29 @@
         }
 
         // ==========================================
-        // 6. QURAN API INTEGRATION (Fixed with Audio & Share)
+        // 6. QURAN API INTEGRATION (Fixed with Audio & Share & Search & Last Read)
         // ==========================================
         async function renderQuranList() {
             root.innerHTML = `
                 <div class="h-full flex flex-col bg-white animate-fade-in relative">
-                    <div class="flex items-center justify-between px-4 py-4 border-b border-gray-100 z-30 bg-white/95 backdrop-blur-sm sticky top-0 h-16 shadow-sm">
+                    <div class="flex items-center justify-between px-4 py-4 z-30 bg-white/95 backdrop-blur-sm sticky top-0 h-16 shadow-sm border-b border-gray-100">
                         <button onclick="navigateTo('home')" class="w-10 h-10 flex items-center justify-center text-slate-500 hover:bg-slate-100 rounded-full transition-colors"><i class="fa-solid fa-arrow-left"></i></button>
                         <h2 class="text-lg font-bold text-slate-800 tracking-tight">Daftar Surah</h2>
                         <div class="w-10"></div>
                     </div>
-                    <div id="quran-container" class="flex-grow overflow-y-auto hide-scrollbar p-4 space-y-2">
+                    
+                    <!-- Search Bar & Last Read Area -->
+                    <div class="p-4 pb-0 bg-white sticky top-16 z-20">
+                         <!-- Last Read Indicator -->
+                        <div id="last-read-container" class="hidden mb-3"></div>
+
+                        <div class="relative mb-2">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                            <input type="text" id="quran-search-input" oninput="handleSurahSearch(this.value)" placeholder="Cari surah (misal: Yasin)..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-all">
+                        </div>
+                    </div>
+
+                    <div id="quran-container" class="flex-grow overflow-y-auto hide-scrollbar p-4 space-y-2 pt-2">
                         <div class="flex flex-col items-center justify-center h-64 text-slate-400 gap-2">
                             <i class="fa-solid fa-circle-notch fa-spin text-3xl text-emerald-500"></i>
                             <span class="text-sm">Memuat Daftar Surah...</span>
@@ -455,6 +475,25 @@
                     </div>
                 </div>`;
             
+            // Render Last Read if exists
+            const lastRead = getLastRead();
+            if (lastRead) {
+                const safeName = lastRead.surahName.replace(/'/g, "\\'");
+                document.getElementById('last-read-container').innerHTML = `
+                    <button onclick="navigateTo('quranDetail', {surahNo: ${lastRead.surahNo}, surahName: '${safeName}'})" class="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 text-white p-3 rounded-xl flex items-center justify-between shadow-md shadow-emerald-200 active:scale-[0.98] transition-all">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center"><i class="fa-solid fa-book-open text-xs"></i></div>
+                            <div class="text-left">
+                                <p class="text-[10px] uppercase text-emerald-100 font-bold tracking-wider">Terakhir Dibaca</p>
+                                <p class="text-sm font-bold text-white leading-tight">QS. ${lastRead.surahName}</p>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-emerald-100 text-xs"></i>
+                    </button>
+                `;
+                document.getElementById('last-read-container').classList.remove('hidden');
+            }
+
             if (AppState.quranListCache) {
                  renderQuranListFromData(AppState.quranListCache);
                  return;
@@ -472,7 +511,18 @@
             }
         }
 
+        function handleSurahSearch(keyword) {
+            if (!AppState.quranListCache) return;
+            const k = keyword.toLowerCase();
+            const filtered = AppState.quranListCache.filter(s => s.namaLatin.toLowerCase().includes(k) || s.arti.toLowerCase().includes(k));
+            renderQuranListFromData(filtered);
+        }
+
         function renderQuranListFromData(data) {
+             if(data.length === 0) {
+                 document.getElementById('quran-container').innerHTML = `<div class="text-center py-10 text-slate-400 text-sm">Surah tidak ditemukan</div>`;
+                 return;
+             }
              const html = data.map(surat => {
                 // Escape apostrophes for safe inline JS
                 const safeName = surat.namaLatin.replace(/'/g, "\\'");
@@ -492,6 +542,9 @@
         }
 
         async function renderQuranDetail(surahNo, surahName) {
+            // Save to Last Read
+            setLastRead(surahNo, surahName);
+
             root.innerHTML = `
                 <div class="h-full flex flex-col bg-white animate-fade-in relative">
                     <div class="flex items-center justify-between px-4 py-4 border-b border-gray-100 z-30 bg-white/95 backdrop-blur-sm sticky top-0 h-16 shadow-sm">

@@ -297,11 +297,13 @@
         // ==========================================
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw8J1hsT-Nb9eBOwDWkPG9Iff6d6Vb9lThA0RjIioCorPRpD3A5oYQ8fIjgXcjQ8J8fAw/exec"; 
         const CACHE_KEY = "dzikir_app_data_v1";
-        let DB = { dzikirPagi: [], dzikirPetang: [], doaHarian: [], dzikirShalat: [], doaQurani: [], belajarTajwid: [] };
+        // Diubah: belajarTajwid diganti menjadi bacaanShalat
+        let DB = { dzikirPagi: [], dzikirPetang: [], doaHarian: [], dzikirShalat: [], doaQurani: [], bacaanShalat: [] };
 
         function smartNormalize(data) {
             const normalized = {};
-            const keyMap = { 'judul': 'title', 'nama': 'title', 'arab': 'arabic', 'teks': 'arabic', 'latin': 'latin', 'terjemah': 'translation', 'faedah': 'faedah', 'jumlah': 'count', 'sumber': 'source', 'isi': 'content', 'contoh': 'example' };
+            // Ditambahkan: 'id': 'id'
+            const keyMap = { 'id': 'id', 'judul': 'title', 'nama': 'title', 'arab': 'arabic', 'teks': 'arabic', 'latin': 'latin', 'terjemah': 'translation', 'faedah': 'faedah', 'jumlah': 'count', 'sumber': 'source', 'isi': 'content', 'contoh': 'example' };
             Object.keys(data).forEach(k => {
                 normalized[k] = data[k].map(i => {
                     const n = {}; Object.keys(i).forEach(rk => n[keyMap[rk.toLowerCase().trim()] || rk.toLowerCase().trim()] = i[rk]); return n;
@@ -368,7 +370,7 @@
         function renderHome() {
             const h = new Date().getHours();
             const greet = h>=10&&h<15?"Selamat Siang":h>=15&&h<18?"Selamat Sore":h>=18?"Selamat Malam":"Selamat Pagi";
-            const quote = ["Ingatlah, hanya dengan mengingat Allah hati menjadi tenteram. (QS. Ar-Ra‘d: 28)", "Dan sungguh, mengingat Allah itu lebih besar (keutamaannya). (QS. Al-‘Ankabut: 45)", "Perumpamaan orang yang berzikir kepada Rabb-nya dan yang tidak berzikir adalah seperti orang hidup dan orang mati. (HR. Bukhari)"][Math.floor(Math.random()*3)];
+            const quote = ["Basahi lisanmu dengan Dzikir.", "Shalat adalah tiang agama.", "Ingatlah Allah, hati akan tenang."][Math.floor(Math.random()*3)];
             
             root.innerHTML = `
                 <div class="h-full flex flex-col islamic-pattern relative animate-fade-in bg-white">
@@ -411,7 +413,7 @@
                                 ${MenuCard("Doa Qurani", "fa-quran", "slider", {type:'doaQurani', title:'Doa-Doa Qurani', rtl:true})}
                                 ${MenuCard("Doa Harian", "fa-hands-praying", "slider", {type:'doaHarian', title:'Doa Harian', rtl:true})}
                                 ${MenuCard("Dzikir Shalat", "fa-mosque", "slider", {type:'dzikirShalat', title:'Dzikir Setelah Shalat', rtl:true})} 
-                                ${MenuCard("Belajar Tajwid", "fa-book-open", "list", {type:'belajarTajwid', title:'Belajar Tajwid'})}
+                                ${MenuCard("Bacaan Shalat", "fa-book-open", "slider", {type:'bacaanShalat', title:'Bacaan Shalat', rtl:true})}
                             </div>
                         </div>
                         

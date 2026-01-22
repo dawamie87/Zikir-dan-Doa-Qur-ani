@@ -132,9 +132,7 @@
         .select-text { -webkit-user-select: text; user-select: text; }
 
         /* Tab Switcher Styles */
-        .tab-btn { position: relative; color: #64748b; transition: all 0.3s; }
-        .tab-btn.active { color: #047857; font-weight: 700; }
-        .tab-btn.active::after { content: ''; position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%); width: 20px; height: 3px; background-color: #047857; border-radius: 10px; }
+        .tab-btn { transition: all 0.2s ease-in-out; }
         
         /* Bookmark highlight in ayat detail */
         .ayat-highlighted { animation: highlight-pulse 2s ease-out; background-color: #ecfdf5; border-color: #34d399; }
@@ -748,24 +746,30 @@
         function switchQuranTab(tabName) {
             AppState.activeQuranTab = tabName;
             
-            // Update Tab UI
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(`tab-btn-${tabName}`).classList.add('active');
+            // Update Tab UI (Segmented Control Style)
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-white', 'text-emerald-600', 'shadow-sm', 'font-extrabold');
+                btn.classList.add('text-slate-500', 'font-bold', 'hover:bg-gray-50');
+            });
+            
+            const activeBtn = document.getElementById(`tab-btn-${tabName}`);
+            if(activeBtn) {
+                activeBtn.classList.remove('text-slate-500', 'font-bold', 'hover:bg-gray-50');
+                activeBtn.classList.add('bg-white', 'text-emerald-600', 'shadow-sm', 'font-extrabold');
+            }
             
             // Render Content
+            const searchContainer = document.getElementById('quran-search-container');
+            
             if(tabName === 'surah') {
-                document.getElementById('quran-search-container').classList.remove('hidden');
+                if(searchContainer) searchContainer.classList.remove('hidden');
                 if (AppState.quranListCache) renderSurahTab(AppState.quranListCache);
                 else renderQuranList(); // Fetch again
-            } else if (tabName === 'juz') {
-                document.getElementById('quran-search-container').classList.add('hidden');
-                renderJuzTab();
-            } else if (tabName === 'index') { // NEW TAB logic
-                document.getElementById('quran-search-container').classList.add('hidden');
-                renderIndexTab();
-            } else if (tabName === 'bookmark') {
-                document.getElementById('quran-search-container').classList.add('hidden');
-                renderBookmarkTab();
+            } else {
+                if(searchContainer) searchContainer.classList.add('hidden');
+                if (tabName === 'juz') renderJuzTab();
+                else if (tabName === 'index') renderIndexTab();
+                else if (tabName === 'bookmark') renderBookmarkTab();
             }
         }
 
@@ -773,31 +777,33 @@
             root.innerHTML = `
                 <div class="h-full flex flex-col bg-white animate-fade-in relative">
                     <!-- Fixed Header Wrapper -->
-                    <div class="sticky top-0 z-30 bg-white border-b border-gray-100 shadow-sm">
-                        <div class="flex items-center justify-between px-4 py-4">
-                            <button onclick="navigateTo('home')" class="w-10 h-10 flex items-center justify-center text-slate-500 hover:bg-slate-100 rounded-full transition-colors"><i class="fa-solid fa-arrow-left"></i></button>
+                    <div class="sticky top-0 z-30 bg-white border-b border-gray-100 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)]">
+                        <div class="flex items-center justify-between px-4 py-3">
+                            <button onclick="navigateTo('home')" class="w-9 h-9 flex items-center justify-center text-slate-500 hover:bg-slate-100 rounded-full transition-colors"><i class="fa-solid fa-arrow-left"></i></button>
                             <h2 class="text-lg font-bold text-slate-800 tracking-tight">Al-Qur'an</h2>
-                            <div class="w-10"></div>
+                            <div class="w-9"></div>
                         </div>
                         
-                        <!-- Search Bar (Conditional) -->
-                        <div id="quran-search-container" class="px-4 pb-2">
-                            <div class="relative">
-                                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                                <input type="text" id="quran-search-input" oninput="handleSurahSearch(this.value)" placeholder="Cari surah..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-all">
+                        <!-- Search Bar -->
+                        <div id="quran-search-container" class="px-4 pb-3">
+                            <div class="relative group">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm group-focus-within:text-emerald-500 transition-colors"></i>
+                                <input type="text" id="quran-search-input" oninput="handleSurahSearch(this.value)" placeholder="Cari surah..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all placeholder:text-slate-400">
                             </div>
                         </div>
 
-                        <!-- Tabs -->
-                        <div class="flex border-t border-gray-50 px-2 pt-1">
-                            <button id="tab-btn-surah" onclick="switchQuranTab('surah')" class="tab-btn flex-1 py-3 text-sm font-medium text-center active"><i class="fa-solid fa-book-quran mr-1.5"></i> Surah</button>
-                            <button id="tab-btn-juz" onclick="switchQuranTab('juz')" class="tab-btn flex-1 py-3 text-sm font-medium text-center"><i class="fa-solid fa-layer-group mr-1.5"></i> Juz</button>
-                            <button id="tab-btn-index" onclick="switchQuranTab('index')" class="tab-btn flex-1 py-3 text-sm font-medium text-center"><i class="fa-solid fa-list-check mr-1.5"></i> Index</button>
-                            <button id="tab-btn-bookmark" onclick="switchQuranTab('bookmark')" class="tab-btn flex-1 py-3 text-sm font-medium text-center"><i class="fa-solid fa-bookmark mr-1.5"></i> Bookmark</button>
+                        <!-- Segmented Tabs -->
+                        <div class="px-4 pb-4">
+                            <div class="flex bg-slate-100 p-1 rounded-xl border border-slate-200/50">
+                                <button id="tab-btn-surah" onclick="switchQuranTab('surah')" class="tab-btn flex-1 py-2.5 text-[10px] rounded-lg text-center bg-white text-emerald-600 shadow-sm font-extrabold uppercase tracking-wider flex items-center justify-center gap-1.5"><i class="fa-solid fa-book-quran text-xs"></i> SURAH</button>
+                                <button id="tab-btn-juz" onclick="switchQuranTab('juz')" class="tab-btn flex-1 py-2.5 text-[10px] rounded-lg text-center text-slate-500 font-bold hover:bg-gray-50 uppercase tracking-wider flex items-center justify-center gap-1.5"><i class="fa-solid fa-layer-group text-xs"></i> JUZ</button>
+                                <button id="tab-btn-index" onclick="switchQuranTab('index')" class="tab-btn flex-1 py-2.5 text-[10px] rounded-lg text-center text-slate-500 font-bold hover:bg-gray-50 uppercase tracking-wider flex items-center justify-center gap-1.5"><i class="fa-solid fa-list-ul text-xs"></i> INDEX</button>
+                                <button id="tab-btn-bookmark" onclick="switchQuranTab('bookmark')" class="tab-btn flex-1 py-2.5 text-[10px] rounded-lg text-center text-slate-500 font-bold hover:bg-gray-50 uppercase tracking-wider flex items-center justify-center gap-1.5"><i class="fa-solid fa-bookmark text-xs"></i> MARK</button>
+                            </div>
                         </div>
                     </div>
 
-                    <div id="quran-container" class="flex-grow overflow-y-auto hide-scrollbar p-4 space-y-2 pt-2">
+                    <div id="quran-container" class="flex-grow overflow-y-auto hide-scrollbar p-4 space-y-2 pt-2 bg-white">
                         <div class="flex flex-col items-center justify-center h-64 text-slate-400 gap-2">
                             <i class="fa-solid fa-circle-notch fa-spin text-3xl text-emerald-500"></i>
                             <span class="text-sm">Memuat Daftar Surah...</span>

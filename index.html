@@ -509,6 +509,59 @@
             30: { surah: 78, ayat: 1, name: "An-Naba'" }
         };
 
+        // Static Thematic Index Data
+        const QURAN_THEMES = [
+            {
+                category: "Keimanan (Aqidah)",
+                icon: "fa-star-and-crescent",
+                topics: [
+                    { title: "Keesaan Allah (Tauhid)", refs: [{s:112, a:1, n:"Al-Ikhlas"}, {s:2, a:255, n:"Al-Baqarah"}, {s:59, a:22, n:"Al-Hashr"}] },
+                    { title: "Iman Kepada Malaikat", refs: [{s:2, a:98, n:"Al-Baqarah"}, {s:66, a:6, n:"At-Tahrim"}] },
+                    { title: "Iman Kepada Kitab", refs: [{s:2, a:4, n:"Al-Baqarah"}, {s:4, a:136, n:"An-Nisa"}] },
+                    { title: "Hari Kiamat", refs: [{s:101, a:1, n:"Al-Qari'ah"}, {s:99, a:1, n:"Az-Zalzalah"}] }
+                ]
+            },
+            {
+                category: "Ibadah & Muamalah",
+                icon: "fa-person-praying",
+                topics: [
+                    { title: "Perintah Shalat", refs: [{s:2, a:43, n:"Al-Baqarah"}, {s:29, a:45, n:"Al-Ankabut"}, {s:20, a:14, n:"Ta-Ha"}] },
+                    { title: "Puasa", refs: [{s:2, a:183, n:"Al-Baqarah"}, {s:2, a:185, n:"Al-Baqarah"}] },
+                    { title: "Zakat & Sedekah", refs: [{s:2, a:43, n:"Al-Baqarah"}, {s:9, a:103, n:"At-Taubah"}, {s:2, a:261, n:"Al-Baqarah"}] },
+                    { title: "Haji", refs: [{s:2, a:196, n:"Al-Baqarah"}, {s:22, a:27, n:"Al-Hajj"}] }
+                ]
+            },
+            {
+                category: "Akhlak & Adab",
+                icon: "fa-hand-holding-heart",
+                topics: [
+                    { title: "Berbakti pada Orang Tua", refs: [{s:17, a:23, n:"Al-Isra"}, {s:31, a:14, n:"Luqman"}] },
+                    { title: "Kesabaran", refs: [{s:2, a:153, n:"Al-Baqarah"}, {s:3, a:200, n:"Ali 'Imran"}] },
+                    { title: "Jujur & Amanah", refs: [{s:9, a:119, n:"At-Taubah"}, {s:4, a:58, n:"An-Nisa"}] },
+                    { title: "Larangan Sombong", refs: [{s:31, a:18, n:"Luqman"}, {s:17, a:37, n:"Al-Isra"}] }
+                ]
+            },
+            {
+                category: "Ilmu & Pengetahuan",
+                icon: "fa-microscope",
+                topics: [
+                    { title: "Penciptaan Manusia", refs: [{s:23, a:12, n:"Al-Mu'minun"}, {s:96, a:2, n:"Al-Alaq"}] },
+                    { title: "Langit & Bumi", refs: [{s:3, a:190, n:"Ali 'Imran"}, {s:21, a:30, n:"Al-Anbiya"}] },
+                    { title: "Air & Kehidupan", refs: [{s:21, a:30, n:"Al-Anbiya"}] }
+                ]
+            },
+            {
+                category: "Kisah Nabi",
+                icon: "fa-scroll",
+                topics: [
+                    { title: "Kisah Nabi Musa AS", refs: [{s:20, a:9, n:"Ta-Ha"}, {s:28, a:7, n:"Al-Qasas"}] },
+                    { title: "Kisah Nabi Yusuf AS", refs: [{s:12, a:4, n:"Yusuf"}] },
+                    { title: "Kisah Nabi Nuh AS", refs: [{s:11, a:25, n:"Hud"}, {s:71, a:1, n:"Nuh"}] },
+                    { title: "Kisah Nabi Ibrahim AS", refs: [{s:26, a:69, n:"Ash-Shu'ara"}] }
+                ]
+            }
+        ];
+
         // Global Audio Variables
         let activeAudio = null;
         let activeAudioBtn = null;
@@ -605,6 +658,9 @@
             } else if (tabName === 'juz') {
                 document.getElementById('quran-search-container').classList.add('hidden');
                 renderJuzTab();
+            } else if (tabName === 'index') { // NEW TAB logic
+                document.getElementById('quran-search-container').classList.add('hidden');
+                renderIndexTab();
             } else if (tabName === 'bookmark') {
                 document.getElementById('quran-search-container').classList.add('hidden');
                 renderBookmarkTab();
@@ -634,6 +690,7 @@
                         <div class="flex border-t border-gray-50 px-2 pt-1">
                             <button id="tab-btn-surah" onclick="switchQuranTab('surah')" class="tab-btn flex-1 py-3 text-sm font-medium text-center active"><i class="fa-solid fa-book-quran mr-1.5"></i> Surah</button>
                             <button id="tab-btn-juz" onclick="switchQuranTab('juz')" class="tab-btn flex-1 py-3 text-sm font-medium text-center"><i class="fa-solid fa-layer-group mr-1.5"></i> Juz</button>
+                            <button id="tab-btn-index" onclick="switchQuranTab('index')" class="tab-btn flex-1 py-3 text-sm font-medium text-center"><i class="fa-solid fa-list-check mr-1.5"></i> Index</button>
                             <button id="tab-btn-bookmark" onclick="switchQuranTab('bookmark')" class="tab-btn flex-1 py-3 text-sm font-medium text-center"><i class="fa-solid fa-bookmark mr-1.5"></i> Bookmark</button>
                         </div>
                     </div>
@@ -714,6 +771,57 @@
             }
             html += '</div>';
             container.innerHTML = html;
+        }
+
+        // New Render Function for Index Tab
+        function renderIndexTab() {
+            const container = document.getElementById('quran-container');
+            let html = '<div class="space-y-3">';
+            
+            QURAN_THEMES.forEach((theme, index) => {
+                html += `
+                <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                    <button onclick="toggleTheme(${index})" class="w-full flex items-center justify-between p-4 text-left bg-slate-50 hover:bg-slate-100 transition-colors">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-sm">
+                                <i class="fa-solid ${theme.icon}"></i>
+                            </div>
+                            <span class="font-bold text-slate-700 text-sm">${theme.category}</span>
+                        </div>
+                        <i id="icon-theme-${index}" class="fa-solid fa-chevron-down text-slate-400 text-xs transition-transform"></i>
+                    </button>
+                    <div id="theme-content-${index}" class="hidden bg-white border-t border-gray-50">
+                        ${theme.topics.map(topic => `
+                            <div class="p-3 border-b border-gray-50 last:border-0">
+                                <h5 class="text-xs font-bold text-slate-600 mb-2 pl-2 border-l-2 border-emerald-400">${topic.title}</h5>
+                                <div class="flex flex-wrap gap-2 pl-2">
+                                    ${topic.refs.map(ref => {
+                                        const safeName = ref.n.replace(/'/g, "\\'");
+                                        return `<button onclick="navigateTo('quranDetail', {surahNo: ${ref.s}, surahName: '${safeName}', highlightAyat: ${ref.a}})" class="px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-md text-[10px] font-medium hover:bg-emerald-100 transition-colors border border-emerald-100">
+                                            ${ref.n}: ${ref.a}
+                                        </button>`;
+                                    }).join('')}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>`;
+            });
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function toggleTheme(index) {
+            const content = document.getElementById(`theme-content-${index}`);
+            const icon = document.getElementById(`icon-theme-${index}`);
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                icon.classList.add('rotate-180');
+            } else {
+                content.classList.add('hidden');
+                icon.classList.remove('rotate-180');
+            }
         }
 
         function renderBookmarkTab() {

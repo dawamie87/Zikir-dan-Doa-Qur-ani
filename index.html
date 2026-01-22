@@ -509,55 +509,157 @@
             30: { surah: 78, ayat: 1, name: "An-Naba'" }
         };
 
-        // Static Thematic Index Data
+        // Static Thematic Index Data (Sorted Alphabetically)
         const QURAN_THEMES = [
             {
-                category: "Keimanan (Aqidah)",
-                icon: "fa-star-and-crescent",
-                topics: [
-                    { title: "Keesaan Allah (Tauhid)", refs: [{s:112, a:1, n:"Al-Ikhlas"}, {s:2, a:255, n:"Al-Baqarah"}, {s:59, a:22, n:"Al-Hashr"}] },
-                    { title: "Iman Kepada Malaikat", refs: [{s:2, a:98, n:"Al-Baqarah"}, {s:66, a:6, n:"At-Tahrim"}] },
-                    { title: "Iman Kepada Kitab", refs: [{s:2, a:4, n:"Al-Baqarah"}, {s:4, a:136, n:"An-Nisa"}] },
-                    { title: "Hari Kiamat", refs: [{s:101, a:1, n:"Al-Qari'ah"}, {s:99, a:1, n:"Az-Zalzalah"}] }
-                ]
-            },
-            {
-                category: "Ibadah & Muamalah",
-                icon: "fa-person-praying",
-                topics: [
-                    { title: "Perintah Shalat", refs: [{s:2, a:43, n:"Al-Baqarah"}, {s:29, a:45, n:"Al-Ankabut"}, {s:20, a:14, n:"Ta-Ha"}] },
-                    { title: "Puasa", refs: [{s:2, a:183, n:"Al-Baqarah"}, {s:2, a:185, n:"Al-Baqarah"}] },
-                    { title: "Zakat & Sedekah", refs: [{s:2, a:43, n:"Al-Baqarah"}, {s:9, a:103, n:"At-Taubah"}, {s:2, a:261, n:"Al-Baqarah"}] },
-                    { title: "Haji", refs: [{s:2, a:196, n:"Al-Baqarah"}, {s:22, a:27, n:"Al-Hajj"}] }
-                ]
-            },
-            {
-                category: "Akhlak & Adab",
+                category: "Adab & Akhlak",
                 icon: "fa-hand-holding-heart",
                 topics: [
-                    { title: "Berbakti pada Orang Tua", refs: [{s:17, a:23, n:"Al-Isra"}, {s:31, a:14, n:"Luqman"}] },
-                    { title: "Kesabaran", refs: [{s:2, a:153, n:"Al-Baqarah"}, {s:3, a:200, n:"Ali 'Imran"}] },
-                    { title: "Jujur & Amanah", refs: [{s:9, a:119, n:"At-Taubah"}, {s:4, a:58, n:"An-Nisa"}] },
-                    { title: "Larangan Sombong", refs: [{s:31, a:18, n:"Luqman"}, {s:17, a:37, n:"Al-Isra"}] }
+                    { title: "Berbakti pada Orang Tua", refs: [{s:17, a:23, n:"Al-Isra"}, {s:31, a:14, n:"Luqman"}, {s:46, a:15, n:"Al-Ahqaf"}] },
+                    { title: "Jujur & Amanah", refs: [{s:9, a:119, n:"At-Taubah"}, {s:4, a:58, n:"An-Nisa"}, {s:33, a:70, n:"Al-Ahzab"}] },
+                    { title: "Kesabaran", refs: [{s:2, a:153, n:"Al-Baqarah"}, {s:3, a:200, n:"Ali 'Imran"}, {s:39, a:10, n:"Az-Zumar"}] },
+                    { title: "Larangan Sombong", refs: [{s:31, a:18, n:"Luqman"}, {s:17, a:37, n:"Al-Isra"}, {s:16, a:23, n:"An-Nahl"}] },
+                    { title: "Menepati Janji", refs: [{s:17, a:34, n:"Al-Isra"}, {s:23, a:8, n:"Al-Mu'minun"}] },
+                    { title: "Tolong Menolong", refs: [{s:5, a:2, n:"Al-Ma'idah"}] }
                 ]
             },
             {
-                category: "Ilmu & Pengetahuan",
+                category: "Akhirat & Kiamat",
+                icon: "fa-hourglass-end",
+                topics: [
+                    { title: "Gambaran Hari Kiamat", refs: [{s:81, a:1, n:"At-Takwir"}, {s:82, a:1, n:"Al-Infitar"}, {s:99, a:1, n:"Az-Zalzalah"}] },
+                    { title: "Surga", refs: [{s:55, a:46, n:"Ar-Rahman"}, {s:56, a:12, n:"Al-Waqi'ah"}, {s:76, a:12, n:"Al-Insan"}] },
+                    { title: "Neraka", refs: [{s:67, a:6, n:"Al-Mulk"}, {s:74, a:26, n:"Al-Muddassir"}, {s:78, a:21, n:"An-Naba"}] },
+                    { title: "Timbangan Amal (Mizan)", refs: [{s:21, a:47, n:"Al-Anbiya"}, {s:101, a:6, n:"Al-Qari'ah"}] }
+                ]
+            },
+            {
+                category: "Al-Qur'an",
+                icon: "fa-book-quran",
+                topics: [
+                    { title: "Fungsi Al-Qur'an", refs: [{s:2, a:2, n:"Al-Baqarah"}, {s:17, a:82, n:"Al-Isra"}, {s:16, a:89, n:"An-Nahl"}] },
+                    { title: "Keaslian Al-Qur'an", refs: [{s:15, a:9, n:"Al-Hijr"}, {s:41, a:42, n:"Fussilat"}] },
+                    { title: "Membaca Al-Qur'an", refs: [{s:73, a:4, n:"Al-Muzzammil"}, {s:35, a:29, n:"Fatir"}] }
+                ]
+            },
+            {
+                category: "Allah SWT (Tauhid)",
+                icon: "fa-star-and-crescent",
+                topics: [
+                    { title: "Keesaan Allah", refs: [{s:112, a:1, n:"Al-Ikhlas"}, {s:2, a:163, n:"Al-Baqarah"}, {s:4, a:48, n:"An-Nisa"}] },
+                    { title: "Ayat Kursi", refs: [{s:2, a:255, n:"Al-Baqarah"}] },
+                    { title: "Asmaul Husna", refs: [{s:59, a:22, n:"Al-Hashr"}, {s:7, a:180, n:"Al-A'raf"}, {s:20, a:8, n:"Ta-Ha"}] },
+                    { title: "Kekuasaan Allah", refs: [{s:3, a:26, n:"Ali 'Imran"}, {s:67, a:1, n:"Al-Mulk"}] }
+                ]
+            },
+            {
+                category: "Doa & Dzikir",
+                icon: "fa-hands-praying",
+                topics: [
+                    { title: "Perintah Berdoa", refs: [{s:40, a:60, n:"Ghafir"}, {s:2, a:186, n:"Al-Baqarah"}] },
+                    { title: "Doa Sapu Jagat", refs: [{s:2, a:201, n:"Al-Baqarah"}] },
+                    { title: "Doa Nabi Adam (Taubat)", refs: [{s:7, a:23, n:"Al-A'raf"}] },
+                    { title: "Doa Nabi Yunus", refs: [{s:21, a:87, n:"Al-Anbiya"}] },
+                    { title: "Keutamaan Dzikir", refs: [{s:13, a:28, n:"Ar-Ra'd"}, {s:33, a:41, n:"Al-Ahzab"}] }
+                ]
+            },
+            {
+                category: "Ekonomi & Harta",
+                icon: "fa-coins",
+                topics: [
+                    { title: "Larangan Riba", refs: [{s:2, a:275, n:"Al-Baqarah"}, {s:3, a:130, n:"Ali 'Imran"}] },
+                    { title: "Jual Beli Halal", refs: [{s:2, a:275, n:"Al-Baqarah"}, {s:4, a:29, n:"An-Nisa"}] },
+                    { title: "Hutang Piutang", refs: [{s:2, a:282, n:"Al-Baqarah"}] },
+                    { title: "Infaq & Sedekah", refs: [{s:2, a:261, n:"Al-Baqarah"}, {s:63, a:10, n:"Al-Munafiqun"}] }
+                ]
+            },
+            {
+                category: "Hukum & Keadilan",
+                icon: "fa-scale-balanced",
+                topics: [
+                    { title: "Menegakkan Keadilan", refs: [{s:4, a:135, n:"An-Nisa"}, {s:5, a:8, n:"Al-Ma'idah"}] },
+                    { title: "Hukum Waris", refs: [{s:4, a:11, n:"An-Nisa"}, {s:4, a:176, n:"An-Nisa"}] },
+                    { title: "Larangan Membunuh", refs: [{s:5, a:32, n:"Al-Ma'idah"}, {s:17, a:33, n:"Al-Isra"}] },
+                    { title: "Saksi & Bukti", refs: [{s:2, a:282, n:"Al-Baqarah"}, {s:24, a:4, n:"An-Nur"}] }
+                ]
+            },
+            {
+                category: "Ibadah",
+                icon: "fa-person-praying",
+                topics: [
+                    { title: "Shalat", refs: [{s:2, a:43, n:"Al-Baqarah"}, {s:29, a:45, n:"Al-Ankabut"}, {s:11, a:114, n:"Hud"}] },
+                    { title: "Wudhu & Tayammum", refs: [{s:5, a:6, n:"Al-Ma'idah"}, {s:4, a:43, n:"An-Nisa"}] },
+                    { title: "Puasa Ramadhan", refs: [{s:2, a:183, n:"Al-Baqarah"}] },
+                    { title: "Zakat", refs: [{s:9, a:60, n:"At-Taubah"}, {s:9, a:103, n:"At-Taubah"}] },
+                    { title: "Haji & Umrah", refs: [{s:2, a:196, n:"Al-Baqarah"}, {s:3, a:97, n:"Ali 'Imran"}] }
+                ]
+            },
+            {
+                category: "Ilmu & Alam Semesta",
                 icon: "fa-microscope",
                 topics: [
-                    { title: "Penciptaan Manusia", refs: [{s:23, a:12, n:"Al-Mu'minun"}, {s:96, a:2, n:"Al-Alaq"}] },
-                    { title: "Langit & Bumi", refs: [{s:3, a:190, n:"Ali 'Imran"}, {s:21, a:30, n:"Al-Anbiya"}] },
-                    { title: "Air & Kehidupan", refs: [{s:21, a:30, n:"Al-Anbiya"}] }
+                    { title: "Penciptaan Langit & Bumi", refs: [{s:3, a:190, n:"Ali 'Imran"}, {s:41, a:11, n:"Fussilat"}] },
+                    { title: "Peredaran Matahari/Bulan", refs: [{s:36, a:38, n:"Yasin"}, {s:21, a:33, n:"Al-Anbiya"}] },
+                    { title: "Air & Hujan", refs: [{s:21, a:30, n:"Al-Anbiya"}, {s:24, a:43, n:"An-Nur"}] },
+                    { title: "Gunung", refs: [{s:78, a:7, n:"An-Naba"}, {s:16, a:15, n:"An-Nahl"}] }
                 ]
             },
             {
-                category: "Kisah Nabi",
+                category: "Keluarga & Pernikahan",
+                icon: "fa-people-roof",
+                topics: [
+                    { title: "Anjuran Menikah", refs: [{s:30, a:21, n:"Ar-Rum"}, {s:24, a:32, n:"An-Nur"}] },
+                    { title: "Mahar (Mas Kawin)", refs: [{s:4, a:4, n:"An-Nisa"}] },
+                    { title: "Talak (Perceraian)", refs: [{s:2, a:229, n:"Al-Baqarah"}, {s:65, a:1, n:"At-Talaq"}] },
+                    { title: "Mendidik Anak", refs: [{s:31, a:13, n:"Luqman"}, {s:66, a:6, n:"At-Tahrim"}] }
+                ]
+            },
+            {
+                category: "Kisah Nabi & Rasul",
                 icon: "fa-scroll",
                 topics: [
-                    { title: "Kisah Nabi Musa AS", refs: [{s:20, a:9, n:"Ta-Ha"}, {s:28, a:7, n:"Al-Qasas"}] },
-                    { title: "Kisah Nabi Yusuf AS", refs: [{s:12, a:4, n:"Yusuf"}] },
-                    { title: "Kisah Nabi Nuh AS", refs: [{s:11, a:25, n:"Hud"}, {s:71, a:1, n:"Nuh"}] },
-                    { title: "Kisah Nabi Ibrahim AS", refs: [{s:26, a:69, n:"Ash-Shu'ara"}] }
+                    { title: "Nabi Adam AS", refs: [{s:2, a:30, n:"Al-Baqarah"}] },
+                    { title: "Nabi Nuh AS", refs: [{s:11, a:25, n:"Hud"}, {s:71, a:1, n:"Nuh"}] },
+                    { title: "Nabi Ibrahim AS", refs: [{s:14, a:35, n:"Ibrahim"}, {s:37, a:102, n:"As-Saffat"}] },
+                    { title: "Nabi Musa AS", refs: [{s:20, a:9, n:"Ta-Ha"}, {s:28, a:7, n:"Al-Qasas"}] },
+                    { title: "Nabi Isa AS", refs: [{s:3, a:45, n:"Ali 'Imran"}, {s:19, a:16, n:"Maryam"}] },
+                    { title: "Nabi Muhammad SAW", refs: [{s:33, a:40, n:"Al-Ahzab"}, {s:48, a:29, n:"Al-Fath"}, {s:68, a:4, n:"Al-Qalam"}] }
+                ]
+            },
+            {
+                category: "Makanan & Minuman",
+                icon: "fa-utensils",
+                topics: [
+                    { title: "Makanan Halal & Haram", refs: [{s:2, a:173, n:"Al-Baqarah"}, {s:5, a:3, n:"Al-Ma'idah"}] },
+                    { title: "Larangan Khamr (Alkohol)", refs: [{s:5, a:90, n:"Al-Ma'idah"}] },
+                    { title: "Makan Tidak Berlebihan", refs: [{s:7, a:31, n:"Al-A'raf"}] }
+                ]
+            },
+            {
+                category: "Malaikat & Gaib",
+                icon: "fa-user-secret",
+                topics: [
+                    { title: "Iman Kepada Malaikat", refs: [{s:2, a:285, n:"Al-Baqarah"}] },
+                    { title: "Malaikat Jibril", refs: [{s:2, a:97, n:"Al-Baqarah"}, {s:97, a:4, n:"Al-Qadr"}] },
+                    { title: "Jin & Setan", refs: [{s:72, a:1, n:"Al-Jinn"}, {s:2, a:168, n:"Al-Baqarah"}] }
+                ]
+            },
+            {
+                category: "Manusia & Kehidupan",
+                icon: "fa-users",
+                topics: [
+                    { title: "Proses Penciptaan Manusia", refs: [{s:23, a:12, n:"Al-Mu'minun"}, {s:32, a:7, n:"As-Sajdah"}] },
+                    { title: "Tujuan Hidup", refs: [{s:51, a:56, n:"Az-Zariyat"}] },
+                    { title: "Ujian Hidup", refs: [{s:2, a:155, n:"Al-Baqarah"}, {s:67, a:2, n:"Al-Mulk"}] }
+                ]
+            },
+            {
+                category: "Wanita",
+                icon: "fa-female",
+                topics: [
+                    { title: "Hijab & Menutup Aurat", refs: [{s:24, a:31, n:"An-Nur"}, {s:33, a:59, n:"Al-Ahzab"}] },
+                    { title: "Wanita Shalihah", refs: [{s:66, a:11, n:"At-Tahrim"}, {s:4, a:34, n:"An-Nisa"}] },
+                    { title: "Hak Wanita", refs: [{s:2, a:228, n:"Al-Baqarah"}] }
                 ]
             }
         ];

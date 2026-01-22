@@ -99,7 +99,7 @@
 
         .islamic-pattern {
             background-color: #ffffff;
-            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23047857' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23047857' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
         }
 
         @keyframes pulse-green {
@@ -294,6 +294,7 @@
             overlay.classList.add('opacity-0');
             modals.forEach(m => m.classList.remove('modal-open'));
             setTimeout(() => overlay.classList.add('hidden'), 300);
+            // Stop audio if modal closed manually? No, keep audio playing.
         }
         function resetSettings() { updateFontScale('arabic', 1); updateFontScale('translation', 1); }
 
@@ -474,6 +475,40 @@
         };
         const root = document.getElementById('app-root');
         
+        // Data Juz
+        const JUZ_START = {
+            1: { surah: 1, ayat: 1, name: "Al-Fatihah" },
+            2: { surah: 2, ayat: 142, name: "Al-Baqarah" },
+            3: { surah: 2, ayat: 253, name: "Al-Baqarah" },
+            4: { surah: 3, ayat: 93, name: "Ali 'Imran" },
+            5: { surah: 4, ayat: 24, name: "An-Nisa'" },
+            6: { surah: 4, ayat: 148, name: "An-Nisa'" },
+            7: { surah: 5, ayat: 82, name: "Al-Ma'idah" },
+            8: { surah: 6, ayat: 111, name: "Al-An'am" },
+            9: { surah: 7, ayat: 88, name: "Al-A'raf" },
+            10: { surah: 8, ayat: 41, name: "Al-Anfal" },
+            11: { surah: 9, ayat: 93, name: "At-Taubah" },
+            12: { surah: 11, ayat: 6, name: "Hud" },
+            13: { surah: 12, ayat: 53, name: "Yusuf" },
+            14: { surah: 15, ayat: 1, name: "Al-Hijr" },
+            15: { surah: 17, ayat: 1, name: "Al-Isra'" },
+            16: { surah: 18, ayat: 75, name: "Al-Kahfi" },
+            17: { surah: 21, ayat: 1, name: "Al-Anbiya'" },
+            18: { surah: 23, ayat: 1, name: "Al-Mu'minun" },
+            19: { surah: 25, ayat: 21, name: "Al-Furqan" },
+            20: { surah: 27, ayat: 56, name: "An-Naml" },
+            21: { surah: 29, ayat: 46, name: "Al-'Ankabut" },
+            22: { surah: 33, ayat: 31, name: "Al-Ahzab" },
+            23: { surah: 36, ayat: 28, name: "Yasin" },
+            24: { surah: 39, ayat: 32, name: "Az-Zumar" },
+            25: { surah: 41, ayat: 47, name: "Fussilat" },
+            26: { surah: 46, ayat: 1, name: "Al-Ahqaf" },
+            27: { surah: 51, ayat: 31, name: "Az-Zariyat" },
+            28: { surah: 58, ayat: 1, name: "Al-Mujadalah" },
+            29: { surah: 67, ayat: 1, name: "Al-Mulk" },
+            30: { surah: 78, ayat: 1, name: "An-Naba'" }
+        };
+
         // Global Audio Variables
         let activeAudio = null;
         let activeAudioBtn = null;
@@ -579,25 +614,28 @@
         async function renderQuranList() {
             root.innerHTML = `
                 <div class="h-full flex flex-col bg-white animate-fade-in relative">
-                    <div class="flex items-center justify-between px-4 py-4 z-30 bg-white/95 backdrop-blur-sm sticky top-0 h-16 shadow-sm border-b border-gray-100">
-                        <button onclick="navigateTo('home')" class="w-10 h-10 flex items-center justify-center text-slate-500 hover:bg-slate-100 rounded-full transition-colors"><i class="fa-solid fa-arrow-left"></i></button>
-                        <h2 class="text-lg font-bold text-slate-800 tracking-tight">Al-Qur'an</h2>
-                        <div class="w-10"></div>
-                    </div>
-                    
-                    <!-- Search Bar -->
-                    <div id="quran-search-container" class="px-4 pt-4 pb-2 bg-white sticky top-16 z-20">
-                        <div class="relative">
-                            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                            <input type="text" id="quran-search-input" oninput="handleSurahSearch(this.value)" placeholder="Cari surah..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-all">
+                    <!-- Fixed Header Wrapper -->
+                    <div class="sticky top-0 z-30 bg-white border-b border-gray-100 shadow-sm">
+                        <div class="flex items-center justify-between px-4 py-4">
+                            <button onclick="navigateTo('home')" class="w-10 h-10 flex items-center justify-center text-slate-500 hover:bg-slate-100 rounded-full transition-colors"><i class="fa-solid fa-arrow-left"></i></button>
+                            <h2 class="text-lg font-bold text-slate-800 tracking-tight">Al-Qur'an</h2>
+                            <div class="w-10"></div>
                         </div>
-                    </div>
+                        
+                        <!-- Search Bar (Conditional) -->
+                        <div id="quran-search-container" class="px-4 pb-2">
+                            <div class="relative">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                                <input type="text" id="quran-search-input" oninput="handleSurahSearch(this.value)" placeholder="Cari surah..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-all">
+                            </div>
+                        </div>
 
-                    <!-- Tabs -->
-                    <div class="flex border-b border-gray-100 sticky top-[7.5rem] bg-white z-20 px-2">
-                        <button id="tab-btn-surah" onclick="switchQuranTab('surah')" class="tab-btn flex-1 py-3 text-sm font-medium text-center active"><i class="fa-solid fa-book-quran mr-1.5"></i> Surah</button>
-                        <button id="tab-btn-juz" onclick="switchQuranTab('juz')" class="tab-btn flex-1 py-3 text-sm font-medium text-center"><i class="fa-solid fa-layer-group mr-1.5"></i> Juz</button>
-                        <button id="tab-btn-bookmark" onclick="switchQuranTab('bookmark')" class="tab-btn flex-1 py-3 text-sm font-medium text-center"><i class="fa-solid fa-bookmark mr-1.5"></i> Bookmark</button>
+                        <!-- Tabs -->
+                        <div class="flex border-t border-gray-50 px-2 pt-1">
+                            <button id="tab-btn-surah" onclick="switchQuranTab('surah')" class="tab-btn flex-1 py-3 text-sm font-medium text-center active"><i class="fa-solid fa-book-quran mr-1.5"></i> Surah</button>
+                            <button id="tab-btn-juz" onclick="switchQuranTab('juz')" class="tab-btn flex-1 py-3 text-sm font-medium text-center"><i class="fa-solid fa-layer-group mr-1.5"></i> Juz</button>
+                            <button id="tab-btn-bookmark" onclick="switchQuranTab('bookmark')" class="tab-btn flex-1 py-3 text-sm font-medium text-center"><i class="fa-solid fa-bookmark mr-1.5"></i> Bookmark</button>
+                        </div>
                     </div>
 
                     <div id="quran-container" class="flex-grow overflow-y-auto hide-scrollbar p-4 space-y-2 pt-2">
@@ -664,10 +702,14 @@
             const container = document.getElementById('quran-container');
             let html = '<div class="grid grid-cols-3 gap-3">';
             for (let i = 1; i <= 30; i++) {
+                const juzData = JUZ_START[i];
+                if (!juzData) continue;
+                // Escape names
+                const safeName = juzData.name.replace(/'/g, "\\'");
                 html += `
-                <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex flex-col items-center justify-center cursor-pointer hover:bg-emerald-50 transition-colors" onclick="alert('Fitur detail per Juz akan segera hadir. Silakan gunakan tab Surah untuk saat ini.')">
+                <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex flex-col items-center justify-center cursor-pointer hover:bg-emerald-50 transition-colors" onclick="navigateTo('quranDetail', {surahNo: ${juzData.surah}, surahName: '${safeName}', highlightAyat: ${juzData.ayat}})">
                     <span class="text-emerald-600 font-bold text-lg mb-1">${i}</span>
-                    <span class="text-[10px] uppercase text-slate-500 font-medium">Juz</span>
+                    <span class="text-[10px] uppercase text-slate-500 font-medium text-center">Juz<br><span class="text-[9px] text-slate-400 normal-case block mt-1 leading-tight">${juzData.name}</span></span>
                 </div>`;
             }
             html += '</div>';
